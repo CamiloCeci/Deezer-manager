@@ -194,3 +194,200 @@ body {
         filter: hue-rotate(15deg); /* Cambia sutilmente el tono del morado dinámicamente */
     }
 }
+
+/* ======================================================================
+   6. LOGIN ESTILO TERMINAL / CYBERPUNK
+   ====================================================================== */
+
+#login-container {
+    perspective: 1000px; /* Le da profundidad por si quieren animar la entrada */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.terminal-card {
+    background-color: #120917; /* Fondo ultra oscuro */
+    border: 2px solid var(--color-acento);
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 0 25px rgba(148, 6, 184, 0.3), inset 0 0 15px rgba(148, 6, 184, 0.2);
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Header de la tarjeta */
+.terminal-header {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    color: var(--color-hover);
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(148, 6, 184, 0.4);
+    padding-bottom: 8px;
+    letter-spacing: 1px;
+}
+
+.status-blink {
+    color: #ff0055;
+    animation: blink 1s infinite alternate;
+}
+
+/* Grid de Imágenes Superiores */
+.terminal-grid-top {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.image-box {
+    border: 1px solid rgba(148, 6, 184, 0.5);
+    height: 150px;
+    overflow: hidden;
+    position: relative;
+    background-color: #000;
+}
+
+/* El truco mágico: Volver las imágenes monocromáticas moradas como tu foto */
+.image-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(100%) brightness(0.8) contrast(1.2);
+    mix-blend-mode: screen;
+}
+
+.image-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(77, 35, 82, 0.5); /* Tinte morado */
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* Formulario centralizado */
+.terminal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    border: 1px solid rgba(148, 6, 184, 0.3);
+    padding: 15px;
+    background-color: rgba(31, 20, 35, 0.4);
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.input-group label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
+    color: var(--color-hover);
+    letter-spacing: 1px;
+}
+
+.input-group input {
+    background-color: rgba(18, 9, 23, 0.8);
+    border: 1px solid var(--color-acento);
+    padding: 10px;
+    color: #FFF;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: var(--transicion-suave);
+}
+
+.input-group input:focus {
+    box-shadow: 0 0 10px var(--color-acento);
+    border-color: #FFF;
+}
+
+/* Botón Estilo Terminal */
+.btn-terminal {
+    font-family: 'Orbitron', sans-serif;
+    background-color: transparent;
+    border: 1px solid var(--color-acento);
+    color: var(--color-acento);
+    padding: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 2px;
+    transition: var(--transicion-suave);
+}
+
+.btn-terminal:hover {
+    background-color: var(--color-acento);
+    color: #FFF;
+    box-shadow: 0 0 15px var(--color-acento);
+}
+
+/* Footer de la tarjeta */
+.terminal-footer {
+    border-top: 1px solid rgba(148, 6, 184, 0.4);
+    padding-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+}
+
+.music-taste-tag {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.7rem;
+    color: #ff0055;
+}
+
+.link-terminal {
+    background: none;
+    border: none;
+    color: var(--texto-secundario);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.link-terminal:hover {
+    color: var(--color-hover);
+}
+
+/* INDICADOR DE CARGA / SPINNER OBLIGATORIO */
+.spinner-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0;
+}
+
+.cyber-spinner {
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(148, 6, 184, 0.2);
+    border-top-color: var(--color-acento);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.spinner-container p {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.7rem;
+    color: var(--color-acento);
+    letter-spacing: 1px;
+}
+
+/* ANIMACIONES */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+@keyframes blink {
+    to { opacity: 0.3; }
+}

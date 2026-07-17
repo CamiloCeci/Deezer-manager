@@ -29,14 +29,58 @@
             </div>
         </div>
 
-        <!-- FORMULARIO DE LOGIN (Oculto inicialmente por CSS con .hidden) -->
+      
+        <!-- FORMULARIO DE LOGIN (Estilo Terminal / Tarjeta de Identificación) -->
         <div id="login-container" class="hidden">
-            <!-- 
-                [PROGRAMADOR 1] Aquí irá tu formulario más adelante.
-                Por ahora lo dejamos preparado.
-            -->
-            <h2>Iniciar Sesión</h2>
-            <!-- Los inputs y el spinner se desarrollarán en el siguiente paso[cite: 3] -->
+            <div class="terminal-card">
+                
+                <!-- HEADER DE LA TARJETA -->
+                <header class="terminal-header">
+                    <span class="status-blink">●</span> SUBJECT ACCESS TERMINAL
+                    <span class="system-id">SYS_v2.026</span>
+                </header>
+
+                <!-- SECCIÓN SUPERIOR: IMÁGENES / ASSETS -->
+                <div class="terminal-grid-top">
+                    <div class="image-box profile-img">
+                        <!-- Imagen temática con filtro morado (Ej: Silueta o glitch) -->
+                        <img src="https://images.unsplash.com/photo-1570158268183-d296b2892211?q=80&w=500" alt="Subject Face">
+                    </div>
+                    <div class="image-box data-graphics">
+                        <!-- Imagen abstracta o calavera/gráfico como tu referencia -->
+                        <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500" alt="System Diagnostics">
+                    </div>
+                </div>
+
+                <!-- SECCIÓN MEDIA: EL FORMULARIO (Donde estaba la info en tu imagen) -->
+                <form id="form-login" class="terminal-form">
+                    <div class="input-group">
+                        <label for="login-user">OPERATIVE_USER:</label>
+                        <input type="text" id="login-user" required placeholder="Introduce tu usuario..." autocomplete="off">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="login-pass">ACCESS_CODE:</label>
+                        <input type="password" id="login-pass" required placeholder="••••••••">
+                    </div>
+
+                    <!-- CONTENEDOR DEL SPINNER OBLIGATORIO (Controlado por JavaScript) -->
+                    <div id="auth-spinner" class="spinner-container hidden">
+                        <div class="cyber-spinner"></div>
+                        <p>VALIDATING CREDENTIALS...</p>
+                    </div>
+
+                    <!-- BOTÓN PRINCIPAL -->
+                    <button type="submit" id="btn-submit-login" class="btn-terminal">ACCESS SYSTEM</button>
+                </form>
+
+                <!-- FOOTER DE LA TARJETA: CREAR PERFIL / MUSIC TASTE -->
+                <footer class="terminal-footer">
+                    <p class="music-taste-tag">// MUSIC_TASTE: COMPROMISED</p>
+                    <button type="button" id="btn-go-register" class="link-terminal">Initialize New Profile [Register]</button>
+                </footer>
+
+            </div>
         </div>
 
     </section>
