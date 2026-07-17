@@ -361,13 +361,13 @@ body {
 .music-taste-tag {
     font-family: 'Orbitron', sans-serif;
     font-size: 0.7rem;
-    color: #92F00C;
+    color: #24d903;
 }
 
 .link-terminal {
     background: none;
     border: none;
-    color: #F00024;
+    color: #fff2f4;
     font-family: 'Space Grotesk', sans-serif;
     font-size: 0.8rem;
     cursor: pointer;

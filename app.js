@@ -6,6 +6,10 @@
 // import { renderBuscador, initReproductor } from './JS/music.js';
 // import { renderBiblioteca } from './JS/storage.js';
 
+
+// Variable global para controlar el intervalo de Matrix
+let matrixIntervalId = null;
+
 // ======================================================================
 // 2. ORQUESTADOR DE NAVEGACIÓN (Control de pantallas y transiciones)
 // ======================================================================
@@ -85,6 +89,7 @@ function inicializarEventosGlobales() {
  * Da acceso al sistema, oculta la sección Auth y muestra la interfaz musical[cite: 3].
  */
 function mostrarDashboardPrincipal() {
+    detenerEfectoMatrix();
     // Oculta toda la sección de Auth (Landing y Login)
     document.getElementById('auth-section').classList.add('hidden');
     
@@ -183,12 +188,24 @@ function initMatrixEffect() {
         }
     }
 
-    // Ejecuta la animación de renderizado de forma continua
-    setInterval(draw, 30);
-
+    matrixIntervalId = setInterval(draw, 30);
+    
     // Ajustar el canvas dinámicamente si cambian el tamaño de la ventana
     window.addEventListener('resize', () => {
         canvas.width = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
     });
+}
+
+function detenerEfectoMatrix() {
+    if (matrixIntervalId) {
+        clearInterval(matrixIntervalId); // Apaga el temporizador de la animación
+        matrixIntervalId = null;
+    }
+    
+    const canvas = document.getElementById("matrix-canvas");
+    if (canvas) {
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // Borra el último fotograma
+    }
 }
