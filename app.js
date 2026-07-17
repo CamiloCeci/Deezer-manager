@@ -4,7 +4,7 @@
 // Nota: Más adelante, cuando creen estos archivos, descomentarán estas líneas.
 // import { comprobarSesion, cerrarSesion } from './JS/auth.js';
 // import { renderBuscador, initReproductor } from './JS/music.js';
-// import { renderBiblioteca } from './JS/storage.js';
+import { iniciarSesion, registrarUsuario, comprobarEstadoSesion } from './JS/auth.js';
 
 
 // Variable global para controlar el intervalo de Matrix
@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
 function verificarEstadoInicial() {
     // [PROGRAMADOR 1]: Aquí usarás tu lógica de cookies/tokens para validar la sesión[cite: 2, 3].
     // Por ahora, simulamos que no hay sesión activa para mostrar la Landing Page.
-    const tieneSesionActiva = false; 
+    const tieneSesionActiva = comprobarEstadoSesion(); 
 
     if (tieneSesionActiva) {
         mostrarDashboardPrincipal();
@@ -47,40 +47,115 @@ function inicializarEventosGlobales() {
         btnComenzar.addEventListener('click', () => {
             document.getElementById('landing-hero').classList.add('hidden');
             document.getElementById('login-container').classList.remove('hidden');
-            
-            // INICIAR EFECTO MATRIX AL MOSTRAR EL LOGIN
             initMatrixEffect();
         });
     }
 
-    // TRANSICIÓN 2: Envío del Formulario de Login (Simulado por ahora)
+    // ======================================================================
+    // INTERCAMBIO ENTRAR LOGIN / REGISTRO (NUEVO CONTROL)
+    // ======================================================================
+    const btnGoRegister = document.getElementById('btn-go-register');
+    const btnGoLogin = document.getElementById('btn-go-login');
+    
     const formLogin = document.getElementById('form-login');
+    const formRegister = document.getElementById('form-register');
+    const terminalSubtitle = document.getElementById('terminal-subtitle');
+
+    if (btnGoRegister && btnGoLogin) {
+        // Al hacer click en "Registrarse"
+        btnGoRegister.addEventListener('click', () => {
+            formLogin.classList.add('hidden');       // Oculta login
+            formRegister.classList.remove('hidden');  // Muestra registro
+            
+            btnGoRegister.classList.add('hidden');    // Oculta el botón de ir a registro
+            btnGoLogin.classList.remove('hidden');    // Muestra el botón de volver a login
+            
+            terminalSubtitle.textContent = "MODE: AUTH_REGISTER"; // Cambia el encabezado
+        });
+
+        // Al hacer click en "Volver al Login"
+        btnGoLogin.addEventListener('click', () => {
+            formRegister.classList.add('hidden');     // Oculta registro
+            formLogin.classList.remove('hidden');     // Muestra login
+            
+            btnGoLogin.classList.add('hidden');       // Oculta el botón de volver
+            btnGoRegister.classList.remove('hidden'); // Muestra el botón de registrarse
+            
+            terminalSubtitle.textContent = "MODE: AUTH_LOGIN"; // Restaura el encabezado
+        });
+    }
+    // [PROGRAMADOR 1]: Envío del Formulario de Login (REAL)
     if (formLogin) {
         formLogin.addEventListener('submit', (e) => {
-            e.preventDefault(); // Evita que la página se recargue[cite: 2]
+            e.preventDefault();
             
-            // [PROGRAMADOR 1]: Aquí va tu feedback visual de spinner obligatorio[cite: 3].
+            const userVal = document.getElementById('login-user').value;
+            const passVal = document.getElementById('login-pass').value;
             const spinner = document.getElementById('auth-spinner');
             const btnSubmit = document.getElementById('btn-submit-login');
             
-            spinner.classList.remove('hidden'); // Muestra indicador de carga[cite: 3]
-            btnSubmit.disabled = true; // Bloquea el botón de acceso
+            // LLAMADA REAL A AUTH.JS
+            const resultado = iniciarSesion(userVal, passVal);
 
-            // Simulación de respuesta del servidor (2 segundos de retraso)
-            setTimeout(() => {
-                spinner.classList.add('hidden');
-                btnSubmit.disabled = false;
-                
-                // Si la validación es correcta, pasamos a la app principal
-                mostrarDashboardPrincipal();
-            }, 2000);
+            if (resultado.exito) {
+                // Si las credenciales existen, activamos la carga por estética cyberpunk
+                spinner.classList.remove('hidden');
+                btnSubmit.disabled = true;
+
+                setTimeout(() => {
+                    spinner.classList.add('hidden');
+                    btnSubmit.disabled = false;
+                    mostrarDashboardPrincipal(); // ¡Adentro del sistema!
+                }, 2000);
+            } else {
+                // Si falla, mostramos el error temático que devuelve auth.js sin pasar de pantalla
+                alert(resultado.mensaje); 
+            }
         });
     }
 
-    // [PROGRAMADOR 1]: Registro del evento del botón de Cerrar Sesión[cite: 3]
-    // document.getElementById('btn-logout').addEventListener('click', () => { ... });
-}
+    // [PROGRAMADOR 1]: Envío del Formulario de Registro (REAL)
+    if (formRegister) {
+        formRegister.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const userVal = document.getElementById('reg-user').value;
+            const pass = document.getElementById('reg-pass').value;
+            const passConfirm = document.getElementById('reg-pass-confirm').value;
 
+            // Validación local obligatoria de contraseñas
+            if (pass !== passConfirm) {
+                alert("CRITICAL ERROR: ACCESS CODES DO NOT MATCH");
+                return;
+            }
+
+            const spinnerReg = document.getElementById('reg-spinner');
+            const btnSubmitReg = document.getElementById('btn-submit-register');
+            
+            // LLAMADA REAL A AUTH.JS para guardar en LocalStorage
+            const resultado = registrarUsuario(userVal, pass);
+
+            if (resultado.exito) {
+                spinnerReg.classList.remove('hidden');
+                btnSubmitReg.disabled = true;
+
+                setTimeout(() => {
+                    spinnerReg.ctx;
+                    spinnerReg.classList.add('hidden');
+                    btnSubmitReg.disabled = false;
+                    alert(`SYSTEM_MESSAGE: ${resultado.mensaje}. PROCEED TO ACCESS TERMINAL.`);
+                    
+                    // Limpia el formulario y hace clic automático para regresar al login
+                    formRegister.reset();
+                    btnGoLogin.click(); 
+                }, 2500);
+            } else {
+                // Alerta si el usuario ya existe en la "base de datos"
+                alert(resultado.mensaje);
+            }
+        });
+    }
+}
 // ======================================================================
 // 3. FUNCIONES DE INTERCAMBIO DE VISTAS (SPA Lógica)
 // ======================================================================
@@ -89,7 +164,7 @@ function inicializarEventosGlobales() {
  * Da acceso al sistema, oculta la sección Auth y muestra la interfaz musical[cite: 3].
  */
 function mostrarDashboardPrincipal() {
-    detenerEfectoMatrix();
+    
     // Oculta toda la sección de Auth (Landing y Login)
     document.getElementById('auth-section').classList.add('hidden');
     
