@@ -10,6 +10,7 @@
     --color-acento: #B664E3;       /* Lila vibrante para botones */
     --color-hover: #DFA3FF;        /* Lila pastel para hovers */
     --color-reproductor: #FFFFFF;  /* Fondo del reproductor */
+    --color-extra: #e1d832f6;
     
     /* Variables generales */
     --color-estrellas: #FFD700;    /* Dorado para la calificación */
@@ -26,8 +27,9 @@ body.theme-dark {
     --texto-principal: #FFFFFF;    /* Blanco puro */
     --texto-secundario: #A28FA9;   /* Lila apagado */
     --color-acento: #9406B8;       /* Violeta eléctrico de tu paleta */
-    --color-hover: #701E85;        /* Morado medio para hovers */
-    --color-reproductor: #150D19;  /* Fondo del reproductor aún más oscuro */
+    --color-hover: #8e24a9;        /* Morado medio para hovers */
+    --color-reproductor: #150D19;  /* Fondo del reproductor aún más oscuro */ 
+    --color-extra: #a86eff;      
 }
 
 /* ======================================================================
@@ -477,5 +479,168 @@ body {
     .terminal-sidebar-images .image-box {
         height: 100px;
     }
+}
+
+/* ======================================================================
+   8. LAYOUT PRINCIPAL Y SIDEBAR (PANEL DE CONTROL)
+   ===================================================================== */
+
+#app-layout {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+}
+
+#sidebar {
+    width: 260px;
+    background-color: #120917; /* Mismo tono berenjena profundo */
+    border-right: 2px solid var(--color-acento);
+    box-shadow: 5px 0 15px rgba(148, 6, 184, 0.1);
+    height: 100vh;
+    position: sticky;
+    top: 0;
+}
+
+.sidebar-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 20px 15px;
+    justify-content: space-between;
+}
+
+/* Panel de Perfil de Usuario */
+.user-profile-panel {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(148, 6, 184, 0.3);
+}
+
+.user-avatar-status {
+    width: 35px;
+    height: 35px;
+    background-color: var(--color-acento);
+    border-radius: 4px;
+    box-shadow: 0 0 10px var(--color-acento);
+    position: relative;
+}
+
+/* Punto verde parpadeante de conectado estilo radar */
+.user-avatar-status::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 10px;
+    height: 10px;
+    background-color: #00ff66;
+    border-radius: 50%;
+    border: 2px solid #120917;
+}
+
+.user-tag {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.65rem;
+    color: #a86eff;
+    letter-spacing: 1px;
+    text-shadow: 0 0 5px var(--color-extra);
+}
+
+#display-username {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #FFF;
+    text-transform: uppercase;
+}
+
+/* Menú de Navegación */
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 30px;
+    flex-grow: 1; /* Empuja el footer hacia abajo */
+}
+
+.nav-link {
+    font-family: 'Orbitron', sans-serif;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--texto-secundario);
+    padding: 12px 15px;
+    text-align: left;
+    font-size: 0.85rem;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: var(--transicion-suave);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-link:hover, .nav-link.active {
+    border-color: var(--color-acento);
+    background-color: rgba(148, 6, 184, 0.1);
+    color: #FFF;
+    text-shadow: 0 0 5px var(--color-acento);
+}
+
+/* Footer del Sidebar y botones del sistema */
+.sidebar-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-top: 1px solid rgba(148, 6, 184, 0.3);
+    padding-top: 20px;
+}
+
+.btn-system-toggle, .btn-system-logout {
+    font-family: 'Space Grotesk', sans-serif;
+    background: transparent;
+    padding: 10px;
+    font-size: 0.8rem;
+    text-align: left;
+    cursor: pointer;
+    transition: var(--transicion-suave);
+    width: 100%;
+}
+
+.btn-system-toggle {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--color-extra);
+}
+
+.btn-system-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.btn-system-logout {
+    border: 1px solid #ff0055;
+    color: #ff0055;
+}
+
+.btn-system-logout:hover {
+    background-color: rgba(255, 0, 85, 0.1);
+    box-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
+}
+
+/* El main content se expande para tomar el resto del monitor */
+#main-content {
+    flex-grow: 1;
+    padding: 30px;
+    background-color: var(--bg-principal);
+    overflow-y: auto;
+    height: 100vh;
+}
+/*SVG cosas*/
+/* Control global para que los iconos hereden tamaño y color del texto que los acompaña */
+.nav-icon {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor; /* Mágico: toma el color del texto del botón */
+    fill: none;
+    flex-shrink: 0;
 }
 

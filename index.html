@@ -133,46 +133,74 @@
     </section>
 
 
-    <!-- ======================================================================
-         2. LAYOUT PRINCIPAL DE LA APP (Inicialmente oculto mediante CSS/JS)
+   <!-- ======================================================================
+         2. INTERFAZ PRINCIPAL DEL SISTEMA (DASHBOARD SPA)
          ====================================================================== -->
-    <div id="app-layout" class="hidden">
+    <section id="app-layout" class="hidden">
         
-        <!-- BARRA LATERAL / NAVEGACIÓN GLOBAL (Trabajo del Programador 1) -->
+        <!-- BARRA LATERAL (Trabajo del Programador 1) -->
         <aside id="sidebar">
-            <!-- 
-                [PROGRAMADOR 1] Aquí van los botones para navegar y controlar la app:
-                - Botón "Buscar Música" (Carga el buscador).
-                - Botón "Mi Biblioteca" (Carga favoritos).
-                - Selector de Modo Claro / Oscuro[cite: 3].
-                - Botón "Cerrar Sesión"[cite: 3].
-            -->
-            <nav id="navigation-menu">
-                <!-- Botones de navegación aquí -->
-            </nav>
+            <div class="sidebar-wrapper">
+                
+                <!-- Perfil del Operativo Logueado -->
+                <div class="user-profile-panel">
+                    <div class="user-avatar-status"></div>
+                    <div class="user-info">
+                        <span class="user-tag">OPERATIVE_ACTIVE</span>
+                        <p id="display-username">USER_UNKNOWN</p>
+                    </div>
+                </div>
+
+                <!-- Menú de Navegación SPA -->
+                <nav class="sidebar-nav">
+                    <button id="btn-nav-search" class="nav-link active">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg> 
+                        SEARCH_MUSIC
+                    </button>
+                    <button id="btn-nav-library" class="nav-link">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                         MY_LIBRARY
+                    </button>
+                </nav>
+
+                <!-- Controles del Sistema (Tema y Logout) -->
+                <div class="sidebar-footer">
+                    <!-- Interruptor de Tema (Inicia en Modo Oscuro, muestra Luna) -->
+                    <button id="btn-toggle-theme" class="btn-system-toggle">
+                        <span id="theme-icon-container">
+                            <!-- SVG de la Luna -->
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                            </svg>
+                        </span>
+                        <span id="theme-text">SWITCH_LIGHT_MODE</span>
+                    </button>
+                    
+                    <!-- Botón de Salida Segura -->
+                    <button id="btn-logout" class="btn-system-logout">
+                        <!-- SVG de Apagar / Salir -->
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" y1="2" x2="12" y2="12"></line>
+                        </svg>
+                        SHUTDOWN_SESSION
+                    </button>
+                </div>
+
+            </div>
         </aside>
 
-        <!-- CONTENEDOR DINÁMICO CENTRAL (Donde se inyectan las pantallas) -->
+        <!-- CONTENEDOR DE CONTENIDO PRINCIPAL (Donde se clonan las plantillas) -->
         <main id="main-content">
-            <!-- 
-                Aquí se renderizará automáticamente el Buscador o la Biblioteca 
-                según lo que el usuario presione en el menú, controlado por app.js.
-            -->
+            <!-- Aquí el orquestador inyectará el Buscador (Dev 2) o la Biblioteca (Dev 3) -->
         </main>
 
-        <!-- REPRODUCTOR DE MÚSICA INFERIOR (Trabajo del Programador 2) -->
-        <footer id="music-player-bar">
-            <!-- 
-                [PROGRAMADOR 2] Aquí va tu reproductor de música fijo abajo (estilo Spotify).
-                - Controles de reproducción (play, pause, barra de progreso)[cite: 2, 3].
-                - Información del track actual (carátula, canción, artista).
-            -->
-            <div id="player-container">
-                <!-- Tu código HTML del reproductor va aquí -->
-            </div>
-        </footer>
-
-    </div>
+    </section>
 
 
     <!-- ======================================================================

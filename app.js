@@ -155,6 +155,80 @@ function inicializarEventosGlobales() {
             }
         });
     }
+
+    // NAVEGACIÓN SIDEBAR (INTERCAMBIO DE PESTAÑAS SPA)
+    const btnNavSearch = document.getElementById('btn-nav-search');
+    const btnNavLibrary = document.getElementById('btn-nav-library');
+
+    if (btnNavSearch && btnNavLibrary) {
+        btnNavSearch.addEventListener('click', () => {
+            btnNavLibrary.classList.remove('active');
+            btnNavSearch.classList.add('active');
+            cargarVistaBuscador();
+        });
+
+        btnNavLibrary.addEventListener('click', () => {
+            btnNavSearch.classList.remove('active');
+            btnNavLibrary.classList.add('active');
+            cargarVistaBiblioteca();
+        });
+    }
+
+    // SELECTOR DE MODO OSCURO / MODO CLARO cpn SVG
+    const btnToggleTheme = document.getElementById('btn-toggle-theme');
+    const themeIconContainer = document.getElementById('theme-icon-container');
+    const themeText = document.getElementById('theme-text');
+
+    if (btnToggleTheme) {
+        btnToggleTheme.addEventListener('click', () => {
+            document.body.classList.toggle('theme-dark');
+            
+            if(document.body.classList.contains('theme-dark')) {
+                // Modo Oscuro activo: Mostrar Luna
+                themeIconContainer.innerHTML = `
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>`;
+                themeText.textContent = "SWITCH_LIGHT_MODE";
+            } else {
+                // Modo Claro activo: Mostrar Sol
+                themeIconContainer.innerHTML = `
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.22" x2="5.64" y2="17.78"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>`;
+                themeText.textContent = "SWITCH_DARK_MODE";
+            }
+        });
+    }
+
+    // CIERRE DE SESIÓN SEGURO (LOGOUT)
+    const btnLogout = document.getElementById('btn-logout');
+    if (btnLogout) {
+        btnLogout.addEventListener('click', () => {
+            // Importamos dinámicamente o llamamos a la función de auth.js
+            import('./JS/auth.js').then(modulo => {
+                modulo.cerrarSesion(); // Borra las cookies y almacenamiento temporal
+                
+                // Regresa la interfaz al estado de Landing Page
+                document.getElementById('app-layout').classList.add('hidden');
+                document.getElementById('auth-section').classList.remove('hidden');
+                document.getElementById('landing-hero').classList.remove('hidden');
+                document.getElementById('login-container').classList.add('hidden');
+                
+                // Reseteamos la pestaña activa visualmente por defecto
+                btnNavLibrary.classList.remove('active');
+                btnNavSearch.classList.add('active');
+            });
+        });
+    }
 }
 // ======================================================================
 // 3. FUNCIONES DE INTERCAMBIO DE VISTAS (SPA Lógica)
@@ -164,12 +238,16 @@ function inicializarEventosGlobales() {
  * Da acceso al sistema, oculta la sección Auth y muestra la interfaz musical[cite: 3].
  */
 function mostrarDashboardPrincipal() {
+    detenerEfectoMatrix(); // Detiene la animación de fondo de la Landing Page
     
     // Oculta toda la sección de Auth (Landing y Login)
     document.getElementById('auth-section').classList.add('hidden');
     
     // Muestra la maqueta principal (Sidebar, Main Content, Reproductor)
     document.getElementById('app-layout').classList.remove('hidden');
+
+    const usuarioLogueado = localStorage.getItem('usuario_activo') || 'OPERATIVE_01';
+    document.getElementById('display-username').textContent = usuarioLogueado;
 
     // [PROGRAMADOR 2]: Al entrar, ejecutamos por defecto la vista del Buscador[cite: 2]
     cargarVistaBuscador(); 
