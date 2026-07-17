@@ -30,8 +30,11 @@
         </div>
 
       
-        <!-- FORMULARIO DE LOGIN (Estilo Terminal / Tarjeta de Identificación) -->
+        <!-- FORMULARIO DE LOGIN REESTRUCTURADO (NUEVO PANEL AMPLIADO) -->
         <div id="login-container" class="hidden">
+
+            <canvas id="matrix-canvas"></canvas>
+
             <div class="terminal-card">
                 
                 <!-- HEADER DE LA TARJETA -->
@@ -40,41 +43,53 @@
                     <span class="system-id">SYS_v2.026</span>
                 </header>
 
-                <!-- SECCIÓN SUPERIOR: IMÁGENES / ASSETS -->
+                <!-- SECCIÓN SUPERIOR: 2 IMÁGENES ORIGINALES -->
                 <div class="terminal-grid-top">
                     <div class="image-box profile-img">
-                        <!-- Imagen temática con filtro morado (Ej: Silueta o glitch) -->
                         <img src="https://images.unsplash.com/photo-1570158268183-d296b2892211?q=80&w=500" alt="Subject Face">
                     </div>
                     <div class="image-box data-graphics">
-                        <!-- Imagen abstracta o calavera/gráfico como tu referencia -->
                         <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500" alt="System Diagnostics">
                     </div>
                 </div>
 
-                <!-- SECCIÓN MEDIA: EL FORMULARIO (Donde estaba la info en tu imagen) -->
-                <form id="form-login" class="terminal-form">
-                    <div class="input-group">
-                        <label for="login-user">OPERATIVE_USER:</label>
-                        <input type="text" id="login-user" required placeholder="Introduce tu usuario..." autocomplete="off">
-                    </div>
+                <!-- SECCIÓN MEDIA: NUEVO LAYOUT DE DOS COLUMNAS -->
+                <div class="terminal-body-layout">
                     
-                    <div class="input-group">
-                        <label for="login-pass">ACCESS_CODE:</label>
-                        <input type="password" id="login-pass" required placeholder="••••••••">
+                    <!-- COLUMNA IZQUIERDA: 2 NUEVAS IMÁGENES LATERALES -->
+                    <div class="terminal-sidebar-images">
+                        <div class="image-box sidebar-img-1">
+                            <img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=500" alt="Biometrics">
+                        </div>
+                        <div class="image-box sidebar-img-2">
+                            <img src="https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?q=80&w=500" alt="Audio Waveform">
+                        </div>
                     </div>
 
-                    <!-- CONTENEDOR DEL SPINNER OBLIGATORIO (Controlado por JavaScript) -->
-                    <div id="auth-spinner" class="spinner-container hidden">
-                        <div class="cyber-spinner"></div>
-                        <p>VALIDATING CREDENTIALS...</p>
-                    </div>
+                    <!-- COLUMNA DERECHA: EL FORMULARIO DE ACCESO -->
+                    <form id="form-login" class="terminal-form">
+                        <div class="input-group">
+                            <label for="login-user">OPERATIVE_USER:</label>
+                            <input type="text" id="login-user" required placeholder="Introduce tu usuario..." autocomplete="off">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="login-pass">ACCESS_CODE:</label>
+                            <input type="password" id="login-pass" required placeholder="••••••••">
+                        </div>
 
-                    <!-- BOTÓN PRINCIPAL -->
-                    <button type="submit" id="btn-submit-login" class="btn-terminal">ACCESS SYSTEM</button>
-                </form>
+                        <!-- INDICADOR DE CARGA (SPINNER OBLIGATORIO) -->
+                        <div id="auth-spinner" class="spinner-container hidden">
+                            <div class="cyber-spinner"></div>
+                            <p>VALIDATING CREDENTIALS...</p>
+                        </div>
 
-                <!-- FOOTER DE LA TARJETA: CREAR PERFIL / MUSIC TASTE -->
+                        <button type="submit" id="btn-submit-login" class="btn-terminal">ACCESS SYSTEM</button>
+                    </form>
+                    
+                </div>
+
+                <!-- FOOTER DE LA TARJETA -->
                 <footer class="terminal-footer">
                     <p class="music-taste-tag">// MUSIC_TASTE: COMPROMISED</p>
                     <button type="button" id="btn-go-register" class="link-terminal">Initialize New Profile [Register]</button>
