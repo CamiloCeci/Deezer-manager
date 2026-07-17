@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deezer-Manager</title>
+    <!-- LLAMADA AL ARCHIVO DE ESTILOS GLOBAL -->
+    <link rel="stylesheet" href="Styles/styles.css">
+</head>
+<body class="theme-light"> <!-- Clase modificable para modo oscuro/claro (Programador 1) -->
+
+    <!-- ======================================================================
+         1. SECCIÓN DE AUTENTICACIÓN (Trabajo del Programador 1)
+         ====================================================================== -->
+    <section id="auth-section">
+        <!-- 
+            [PROGRAMADOR 1] Aquí va tu formulario de Login / Registro.
+            Recuerda incluir:
+            - Formulario de credenciales conectado al servidor[cite: 3].
+            - Control de cookies para guardar el token.
+            - El spinner animado de carga (mientras se valida la sesión)[cite: 3].
+        -->
+        <div id="auth-container">
+            <!-- Tu código HTML de login va aquí -->
+        </div>
+    </section>
+
+
+    <!-- ======================================================================
+         2. LAYOUT PRINCIPAL DE LA APP (Inicialmente oculto mediante CSS/JS)
+         ====================================================================== -->
+    <div id="app-layout" class="hidden">
+        
+        <!-- BARRA LATERAL / NAVEGACIÓN GLOBAL (Trabajo del Programador 1) -->
+        <aside id="sidebar">
+            <!-- 
+                [PROGRAMADOR 1] Aquí van los botones para navegar y controlar la app:
+                - Botón "Buscar Música" (Carga el buscador).
+                - Botón "Mi Biblioteca" (Carga favoritos).
+                - Selector de Modo Claro / Oscuro[cite: 3].
+                - Botón "Cerrar Sesión"[cite: 3].
+            -->
+            <nav id="navigation-menu">
+                <!-- Botones de navegación aquí -->
+            </nav>
+        </aside>
+
+        <!-- CONTENEDOR DINÁMICO CENTRAL (Donde se inyectan las pantallas) -->
+        <main id="main-content">
+            <!-- 
+                Aquí se renderizará automáticamente el Buscador o la Biblioteca 
+                según lo que el usuario presione en el menú, controlado por app.js.
+            -->
+        </main>
+
+        <!-- REPRODUCTOR DE MÚSICA INFERIOR (Trabajo del Programador 2) -->
+        <footer id="music-player-bar">
+            <!-- 
+                [PROGRAMADOR 2] Aquí va tu reproductor de música fijo abajo (estilo Spotify).
+                - Controles de reproducción (play, pause, barra de progreso)[cite: 2, 3].
+                - Información del track actual (carátula, canción, artista).
+            -->
+            <div id="player-container">
+                <!-- Tu código HTML del reproductor va aquí -->
+            </div>
+        </footer>
+
+    </div>
+
+
+    <!-- ======================================================================
+         3. PLANTILLAS DINÁMICAS (No se muestran hasta que JS las clona)
+         ====================================================================== -->
+
+    <!-- PLANTILLA DEL BUSCADOR (Trabajo del Programador 2) -->
+    <template id="temp-buscador">
+        <section id="search-view">
+            <!-- 
+                [PROGRAMADOR 2] Aquí va tu HTML para el buscador:
+                - Input para buscar artista y botón[cite: 2].
+                - Sección para el "Top 10 populares" (Linkin Park y otros)[cite: 2].
+                - Panel dinámico para pintar el Detalle del Artista (Álbumes y Tracks)[cite: 3].
+                - Estado vacío con SVG carita triste si no hay resultados[cite: 2].
+            -->
+            <div class="search-wrapper">
+                <!-- Tu código HTML de búsqueda va aquí -->
+            </div>
+        </section>
+    </template>
+
+    <!-- PLANTILLA DE LA BIBLIOTECA (Trabajo del Programador 3) -->
+    <template id="temp-biblioteca">
+        <section id="library-view">
+            <!-- 
+                [PROGRAMADOR 3] Aquí va tu HTML para la colección privada[cite: 3]:
+                - Listado de álbumes favoritos guardados[cite: 3].
+                - Filtros dinámicos por cantidad de estrellas (1-5)[cite: 3].
+                - Sistema de calificación visual por estrellas en cada tarjeta de álbum[cite: 3].
+            -->
+            <div class="library-wrapper">
+                <!-- Tu código HTML de favoritos va aquí -->
+            </div>
+        </section>
+    </template>
+
+
+    <!-- ======================================================================
+         4. CONTROLADOR PRINCIPAL (Cargado como Módulo)
+         ====================================================================== -->
+    <script type="module" src="app.js"></script>
+
+</body>
+</html>
