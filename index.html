@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Deezer-Manager</title>
     <!-- LLAMADA AL ARCHIVO DE ESTILOS GLOBAL -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Syne:wght@700;800&family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="Styles/styles.css">
 </head>
 <body class="theme-light"> <!-- Clase modificable para modo oscuro/claro (Programador 1) -->
@@ -13,16 +17,28 @@
          1. SECCIÓN DE AUTENTICACIÓN (Trabajo del Programador 1)
          ====================================================================== -->
     <section id="auth-section">
-        <!-- 
-            [PROGRAMADOR 1] Aquí va tu formulario de Login / Registro.
-            Recuerda incluir:
-            - Formulario de credenciales conectado al servidor[cite: 3].
-            - Control de cookies para guardar el token.
-            - El spinner animado de carga (mientras se valida la sesión)[cite: 3].
-        -->
-        <div id="auth-container">
-            <!-- Tu código HTML de login va aquí -->
+
+        <div id="landing-hero">
+            <div class="hero-overlay"></div> <!-- Capa oscura para dar la vibra misteriosa -->
+            
+            <div class="hero-content">
+                <h1 class="hero-title">Sincroniza<br><span>Dimensión Musical</span></h1>
+                <p class="hero-subtitle">Gestiona, califica y domina tu biblioteca de Deezer de una forma totalmente diferente.</p>
+                <!-- BOTÓN CRÍTICO PARA IR AL LOGIN -->
+                <button id="btn-comenzar" class="btn-primary">Empezar ahora</button>
+            </div>
         </div>
+
+        <!-- FORMULARIO DE LOGIN (Oculto inicialmente por CSS con .hidden) -->
+        <div id="login-container" class="hidden">
+            <!-- 
+                [PROGRAMADOR 1] Aquí irá tu formulario más adelante.
+                Por ahora lo dejamos preparado.
+            -->
+            <h2>Iniciar Sesión</h2>
+            <!-- Los inputs y el spinner se desarrollarán en el siguiente paso[cite: 3] -->
+        </div>
+
     </section>
 
 

@@ -40,7 +40,7 @@ body.theme-dark {
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Space Grotesk', sans-serif;
     background-color: var(--bg-principal);
     color: var(--texto-principal);
     transition: var(--transicion-suave); /* Cambia el tema con una transición suave */
@@ -100,4 +100,97 @@ body {
     border-top: 1px solid var(--color-hover);
     padding: 15px 30px;
     z-index: 100; /* Asegura que flote por encima de todo[cite: 2] */
+}
+
+/* ======================================================================
+   5. PANTALLA DE BIENVENIDA (LANDING HERO)
+   ====================================================================== */
+
+#landing-hero {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    /* Efecto misterioso: un degradado radial oscuro que simula un misterioso haz de luz morada */
+    background: radial-gradient(circle, rgba(148,6,184,0.15) 0%, var(--bg-principal) 80%), 
+                url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1974&auto=format&fit=crop') no-repeat center center/cover;
+    padding: 20px;
+}
+
+/* Capa oscura superpuesta para asegurar legibilidad y ambiente oscuro */
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(15, 9, 18, 0.65); /* Tono berenjena hiper oscuro transparente */
+    z-index: 1;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2; /* Por encima de la capa oscura */
+    max-width: 700px;
+}
+
+.hero-title {
+    font-family: 'Syne', sans-serif; /* Fuente alocada/artística */
+    font-size: 4.5rem; /* Más grande e imponente */
+    font-weight: 800;
+    text-transform: uppercase; /* Todo en mayúsculas para más fuerza */
+    line-height: 1.05;
+    color: #FFFFFF;
+    margin-bottom: 25px;
+    letter-spacing: -2px; /* Letras super pegadas para esa vibra extraña */
+    transform: skewX(-5px); /* Inclina sutilmente el texto para darle un look disruptivo */
+}
+
+.hero-title span {
+    color: var(--color-acento);
+    text-shadow: 0 0 15px rgba(148, 6, 184, 0.8), 0 0 30px rgba(148, 6, 184, 0.4); /* Brillo neón más denso */
+    display: inline-block;
+    animation: pulse-glitch 3s infinite alternate; /* Efecto vivo extraño */
+}
+
+.hero-subtitle {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.1rem;
+    color: var(--color-acento);
+    margin-bottom: 45px;
+    font-weight: 400;
+    letter-spacing: 1px;
+}
+
+.btn-primary {
+    font-family: 'Orbitron', sans-serif; /* Fuente estilo marcador digital/cyberpunk para botones */
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    background-color: var(--color-acento);
+    color: #FFFFFF;
+    border: none;
+    padding: 16px 45px;
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 4px; /* Bordes cuadrados o ligeramente redondeados se ven más underground que un óvalo perfectito */
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(148, 6, 184, 0.5);
+    transition: var(--transicion-suave);
+}
+
+/* ======================================================================
+   ANIMACIÓN EXTRAÑA (EFECTO GLITCH / PULSO)
+   ====================================================================== */
+@keyframes pulse-glitch {
+    0% {
+        transform: scale(1);
+        filter: hue-rotate(0deg);
+    }
+    100% {
+        transform: scale(1.02);
+        filter: hue-rotate(15deg); /* Cambia sutilmente el tono del morado dinámicamente */
+    }
 }
