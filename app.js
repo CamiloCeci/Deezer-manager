@@ -3,7 +3,7 @@
 // ======================================================================
 // Nota: Más adelante, cuando creen estos archivos, descomentarán estas líneas.
 // import { comprobarSesion, cerrarSesion } from './JS/auth.js';
-// import { renderBuscador, initReproductor } from './JS/music.js';
+import { renderBuscador } from './JS/music.js';
 import { iniciarSesion, registrarUsuario, comprobarEstadoSesion } from './JS/auth.js';
 
 
@@ -266,9 +266,8 @@ function cargarVistaBuscador() {
     contenedor.innerHTML = ''; // Borra la pantalla anterior
     contenedor.appendChild(plantilla.content.cloneNode(true)); // Inserta la estructura limpia
 
-    // [PROGRAMADOR 2]: Aquí llamarás a la función de tu archivo music.js 
-    // para activar la lógica de fetch a la API de Deezer y los tops estáticos[cite: 2, 3].
-    // renderBuscador();
+    // ACTIVACIÓN DE LOGICA DEEZER
+    renderBuscador();
 }
 
 /**

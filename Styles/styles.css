@@ -489,15 +489,16 @@ body {
     display: flex;
     width: 100%;
     min-height: 100vh;
+    overflow-y: auto; /* El scroll ahora pertenece al contenedor padre global */
 }
 
 #sidebar {
     width: 260px;
-    background-color: #120917; /* Mismo tono berenjena profundo */
+    background-color: #120917;
     border-right: 2px solid var(--color-acento);
     box-shadow: 5px 0 15px rgba(148, 6, 184, 0.1);
     height: 100vh;
-    position: sticky;
+    position: sticky; /* Se queda fijo a la izquierda mientras el resto baja */
     top: 0;
 }
 
@@ -631,9 +632,10 @@ body {
     flex-grow: 1;
     padding: 30px;
     background-color: var(--bg-principal);
-    overflow-y: auto;
-    height: 100vh;
+    height: auto; /* Eliminamos el height estricto de 100vh que rompía el scroll */
+    min-height: 100vh;
 }
+
 /*SVG cosas*/
 /* Control global para que los iconos hereden tamaño y color del texto que los acompaña */
 .nav-icon {
@@ -644,3 +646,458 @@ body {
     flex-shrink: 0;
 }
 
+/* ======================================================================
+   9. ESTILOS DE BÚSQUEDA Y API DEEZER (Trabajo del Programador 2)
+   ====================================================================== */
+
+.search-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    animation: fadeInForm 0.4s ease-in-out;
+}
+
+/* Barra de Búsqueda Cyberpunk */
+.search-bar-container {
+    background-color: rgba(18, 9, 23, 0.7);
+    border: 1px solid var(--color-acento);
+    padding: 15px;
+    border-radius: 4px;
+}
+
+.search-input-group {
+    display: flex;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(148, 6, 184, 0.4);
+    padding: 5px 15px;
+}
+
+.search-prompt {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--color-acento);
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+#input-search-artist {
+    flex-grow: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #FFF;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem;
+    padding: 10px 5px;
+}
+
+.btn-search-submit {
+    background: transparent;
+    border: none;
+    color: var(--color-acento);
+    cursor: pointer;
+    transition: var(--transicion-suave);
+}
+
+.btn-search-submit:hover {
+    color: #FFF;
+    transform: scale(1.1);
+}
+
+/* Títulos de Sección */
+.section-cyber-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+    color: var(--texto-principal);
+}
+
+/* Grid de Destacados: 2 Filas, Distribución Horizontal */
+.featured-artists-grid {
+    display: grid;
+    /* Copia exacta del comportamiento auto-fill responsivo de tus álbumes */
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+/* Tarjeta Individual de Artista: Clon simétrico de .album-card */
+.featured-artist-card {
+    background-color: var(--bg-tarjetas);
+    border: 1px solid rgba(148, 6, 184, 0.15); /* Mismo borde de los álbumes */
+    border-radius: 4px;
+    padding: 12px; /* Mismo padding de los álbumes */
+    cursor: pointer;
+    transition: var(--transicion-suave);
+    text-align: center; /* Centrado de textos igual que tus álbumes */
+    
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
+
+    /* Forzado estricto de dimensiones por Hardware mediante Pixeles */
+    width: 100%;
+    height: 250px; /* Altura fija base para escritorio */
+}
+
+/* Ajuste milimétrico según dispositivo */
+@media (min-width: 1024px) {
+    /* En Desktop forzamos un ancho simétrico que respete el minmax(160px) */
+    .featured-artist-card {
+        height: 260px; 
+    }
+}
+
+@media (max-width: 768px) {
+    /* En móviles reducimos la altura para que mantenga una proporción compacta */
+    .featured-artists-grid {
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 10px;
+    }
+    .featured-artist-card {
+        height: 210px;
+        padding: 8px;
+    }
+}
+
+.featured-artist-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--color-acento);
+    box-shadow: 0 4px 12px rgba(148, 6, 184, 0.25); /* Misma sombra que álbumes */
+}
+
+/* Contenedor de Imagen de Artista (Calco exacto de .album-img-wrapper) */
+.card-img-wrapper {
+    width: 100%;
+    aspect-ratio: 1; /* Cuadrado perfecto */
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+    background-color: #000;
+}
+
+.card-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: var(--transicion-suave);
+}
+
+.featured-artist-card:hover .card-img-wrapper img {
+    transform: scale(1.05);
+}
+
+/* Tipografías coordinadas con el diseño de los álbumes */
+.card-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    flex-grow: 1;
+}
+
+.card-info h3 {
+    font-size: 0.9rem; /* Mismo tamaño que h4 en tus álbumes */
+    font-weight: 700;
+    color: var(--texto-principal);
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-fans {
+    font-size: 0.75rem; /* Mismo tamaño que el año en tus álbumes */
+    color: var(--texto-secundario);
+    margin: 0;
+}
+
+.card-index {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.65rem;
+    color: var(--color-acento);
+}
+
+body.theme-dark .card-fans {
+    color: var(--texto-secundario);
+}
+
+/* Estado Vacío - SVG Carita Triste */
+.empty-state-card {
+    position: relative;
+    border: 2px dashed #ff0055;
+    background-color: rgba(255, 0, 85, 0.05);
+    padding: 60px 20px;
+    text-align: center;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* SVG gigante posicionado detrás como marca de agua de fondo */
+.empty-svg-bg {
+    position: absolute;
+    width: 250px;
+    height: 250px;
+    color: rgba(255, 0, 85, 0.08);
+    z-index: 1;
+    pointer-events: none;
+}
+
+.empty-svg-bg svg {
+    width: 100%;
+    height: 100%;
+}
+
+.empty-state-content {
+    position: relative;
+    z-index: 2; /* Por encima de la marca de agua */
+}
+
+.empty-state-content h3 {
+    font-family: 'Orbitron', sans-serif;
+    color: #ff0055;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+/* Detalle Ficha del Artista */
+.btn-link-cyber {
+    font-family: 'Orbitron', sans-serif;
+    background: transparent;
+    border: none;
+    color: var(--color-acento);
+    cursor: pointer;
+    font-size: 0.85rem;
+    margin-bottom: 20px;
+    text-decoration: underline;
+}
+
+.artist-hero-header {
+    display: flex;
+    gap: 25px;
+    background-color: var(--bg-tarjetas);
+    padding: 25px;
+    border: 1px solid rgba(148, 6, 184, 0.3);
+    border-radius: 4px;
+    align-items: center;
+}
+
+.artist-big-img {
+    width: 160px;
+    height: 160px;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 2px solid var(--color-acento);
+}
+
+.artist-big-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.artist-name-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.5rem;
+    line-height: 1.1;
+    margin: 8px 0;
+}
+
+.system-badge {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.7rem;
+    background-color: var(--color-acento);
+    color: #FFF;
+    padding: 4px 8px;
+    border-radius: 2px;
+}
+
+.artist-stats-grid {
+    display: flex;
+    gap: 20px;
+    font-size: 0.9rem;
+    color: var(--texto-secundario);
+    margin-top: 10px;
+}
+
+/* Lista de Canciones */
+.top-tracks-section {
+    margin-top: 30px;
+}
+
+.top-tracks-section h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    margin-bottom: 15px;
+}
+
+.tracks-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.track-row {
+    display: grid;
+    grid-template-columns: 50px 1fr 80px;
+    background-color: var(--bg-tarjetas);
+    padding: 15px;
+    align-items: center;
+    border-left: 3px solid transparent;
+    transition: var(--transicion-suave);
+}
+
+.track-row:hover {
+    border-left-color: var(--color-acento);
+    background-color: rgba(148, 6, 184, 0.05);
+}
+
+.track-num {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--color-acento);
+    font-weight: 700;
+}
+
+.track-meta {
+    display: flex;
+    flex-direction: column;
+}
+
+.track-title {
+    font-weight: 500;
+}
+
+.track-album-name {
+    font-size: 0.8rem;
+    color: var(--texto-secundario);
+}
+
+.track-duration {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.85rem;
+    text-align: right;
+    color: var(--texto-secundario);
+}
+
+/* Animaciones de Carga Internas */
+.cyber-loader {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.9rem;
+    color: var(--color-acento);
+    padding: 40px;
+    text-align: center;
+    animation: blink 1s infinite alternate;
+}
+
+/* ======================================================================
+   NUEVOS COMPONENTES: SECCIÓN ÁLBUMES Y CONTROLES (Programador 2)
+   ====================================================================== */
+
+/* Mantenemos la barra de búsqueda estática arriba de todo el wrapper */
+.search-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+/* Cuadrícula de álbumes en formato de tarjetas */
+.albums-grid-section {
+    margin: 30px 0;
+}
+
+.albums-cyber-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.album-card {
+    background-color: var(--bg-tarjetas);
+    border: 1px solid rgba(148, 6, 184, 0.15);
+    border-radius: 4px;
+    padding: 12px;
+    cursor: pointer;
+    transition: var(--transicion-suave);
+    text-align: center;
+}
+
+.album-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--color-acento);
+    box-shadow: 0 4px 12px rgba(148, 6, 184, 0.25);
+}
+
+.album-img-wrapper {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+    background-color: #000;
+}
+
+.album-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.album-card h4 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+}
+
+.album-card p {
+    font-size: 0.75rem;
+    color: var(--texto-secundario);
+}
+
+/* Botón "Ver más" de estética Cyberpunk */
+.btn-load-more-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 15px;
+}
+
+.btn-cyber-outline {
+    font-family: 'Orbitron', sans-serif;
+    background: transparent;
+    border: 1px solid var(--color-acento);
+    color: var(--color-acento);
+    padding: 8px 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: var(--transicion-suave);
+}
+
+.btn-cyber-outline:hover {
+    background-color: rgba(148, 6, 184, 0.1);
+    box-shadow: 0 0 10px var(--color-acento);
+}
+
+/* Modal / Panel de canciones del álbum */
+.album-tracks-modal {
+    margin-top: 20px;
+    border: 1px solid var(--color-hover);
+    background-color: rgba(18, 9, 23, 0.4);
+    padding: 20px;
+    border-radius: 4px;
+}
+
+.album-tracks-modal h4 {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--color-acento);
+    margin-bottom: 15px;
+}

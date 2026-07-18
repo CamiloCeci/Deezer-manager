@@ -210,15 +210,63 @@
     <!-- PLANTILLA DEL BUSCADOR (Trabajo del Programador 2) -->
     <template id="temp-buscador">
         <section id="search-view">
-            <!-- 
-                [PROGRAMADOR 2] Aquí va tu HTML para el buscador:
-                - Input para buscar artista y botón[cite: 2].
-                - Sección para el "Top 10 populares" (Linkin Park y otros)[cite: 2].
-                - Panel dinámico para pintar el Detalle del Artista (Álbumes y Tracks)[cite: 3].
-                - Estado vacío con SVG carita triste si no hay resultados[cite: 2].
-            -->
             <div class="search-wrapper">
-                <!-- Tu código HTML de búsqueda va aquí -->
+                
+                <!-- LA BARRA DE BÚSQUEDA SIEMPRE QUEDA ARRIBA FIJA -->
+                <div class="search-bar-container">
+                    <form id="search-form" class="cyber-search-form">
+                        <div class="search-input-group">
+                            <span class="search-prompt">SYSTEM_SEARCH_>&nbsp;</span>
+                            <input type="text" id="input-search-artist" required placeholder="Introduce el nombre del artista a consultar..." autocomplete="off">
+                            <button type="submit" class="btn-search-submit">
+                                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg> 
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- CONTENEDOR DE VISTAS CONMUTABLES -->
+                <div id="search-dynamic-content">
+                    
+                    <!-- SUB-VISTA A: DESTACADOS DE HOY -->
+                    <div id="view-featured-artists" class="">
+                        <h2 class="section-cyber-title">// FEATURED_ARTISTS_TODAY [LIMIT_10]</h2>
+                        <div id="featured-grid" class="featured-artists-grid">
+                            <!-- Inyectado por JS -->
+                        </div>
+                    </div>
+
+                    <!-- SUB-VISTA B: DETALLE COMPLETO DEL ARTISTA -->
+                    <div id="view-artist-profile" class="hidden">
+                        <!-- Botón para retroceder ordenadamente -->
+                        <button id="btn-back-to-featured" class="btn-link-cyber"><&nbsp;RETURN_TO_PREVIOUS_PAGE</button>
+                        <div id="artist-profile-detail">
+                            <!-- Inyectado por JS (Foto, álbumes paginados, singles) -->
+                        </div>
+                    </div>
+
+                    <!-- SUB-VISTA C: ESTADO VACÍO / ERROR -->
+                    <div id="view-search-empty" class="hidden">
+                        <div class="empty-state-card">
+                            <div class="empty-svg-bg">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M16 16s-1.5-2-4-2-4 2-4 2"></path>
+                                    <line x1="9" y1="9" x2="9.01" y2="9"></line>
+                                    <line x1="15" y1="9" x2="15.01" y2="9"></line>
+                                </svg>
+                            </div>
+                            <div class="empty-state-content">
+                                <h3>CRITICAL_ERROR: ARTIST_NOT_FOUND</h3>
+                                <p>Lo sentimos, no encontramos a este artista, verifica su nombre e intentalo nuevamente.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </section>
     </template>
