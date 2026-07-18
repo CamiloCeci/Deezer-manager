@@ -489,7 +489,7 @@ body {
     display: flex;
     width: 100%;
     min-height: 100vh;
-    overflow-y: auto; /* El scroll ahora pertenece al contenedor padre global */
+    /* ELIMINADO overflow-y: auto; -> El scroll debe manejarlo el body de forma natural */
 }
 
 #sidebar {
@@ -497,9 +497,12 @@ body {
     background-color: #120917;
     border-right: 2px solid var(--color-acento);
     box-shadow: 5px 0 15px rgba(148, 6, 184, 0.1);
-    height: 100vh;
-    position: sticky; /* Se queda fijo a la izquierda mientras el resto baja */
-    top: 0;
+    
+    /* CAMBIO CRÍTICO: */
+    height: calc(100vh - 90px); /* Restamos los 90px del reproductor inferior para que no tape el botón de salir */
+    position: sticky;           /* Ahora sí se acoplará dinámicamente al viewport */
+    top: 0;                     /* Punto de anclaje superior exacto */
+    z-index: 90;                /* Se mantiene por debajo del reproductor (z-index: 100) pero sobre el contenido */
 }
 
 .sidebar-wrapper {
@@ -508,6 +511,7 @@ body {
     height: 100%;
     padding: 20px 15px;
     justify-content: space-between;
+    overflow-y: auto; /* Por seguridad: si la pantalla es muy pequeña, el menú interno tendrá su propio scroll sin romper la app */
 }
 
 /* Panel de Perfil de Usuario */
