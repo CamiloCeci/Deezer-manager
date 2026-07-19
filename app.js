@@ -3,6 +3,7 @@
 // ======================================================================
 // Nota: Más adelante, cuando creen estos archivos, descomentarán estas líneas.
 // import { comprobarSesion, cerrarSesion } from './JS/auth.js';
+import { inicializarReproductor } from './JS/player.js';
 import { renderBuscador } from './JS/music.js';
 import { iniciarSesion, registrarUsuario, comprobarEstadoSesion } from './JS/auth.js';
 
@@ -249,11 +250,8 @@ function mostrarDashboardPrincipal() {
     const usuarioLogueado = localStorage.getItem('usuario_activo') || 'OPERATIVE_01';
     document.getElementById('display-username').textContent = usuarioLogueado;
 
-    // [PROGRAMADOR 2]: Al entrar, ejecutamos por defecto la vista del Buscador[cite: 2]
-    cargarVistaBuscador(); 
-    
-    // [PROGRAMADOR 2]: Inicializa los controles del reproductor inferior[cite: 2]
-    // initReproductor();
+    cargarVistaBuscador();   
+    inicializarReproductor();
 }
 
 /**

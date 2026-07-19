@@ -200,6 +200,62 @@
             <!-- Aquí el orquestador inyectará el Buscador (Dev 2) o la Biblioteca (Dev 3) -->
         </main>
 
+        <!-- ======================================================================
+             REPRODUCTOR DE MÚSICA GLOBAL (Fijo en la parte inferior)
+             ====================================================================== -->
+        <footer id="music-player-bar">
+            <!-- Motor de audio oculto -->
+            <audio id="global-audio-player"></audio>
+
+            <div class="player-wrapper">
+                <!-- Bloque Izquierdo: Info de la canción actual -->
+                <div class="player-track-info">
+                    <div class="player-img-wrapper">
+                        <img id="player-cover" src="https://via.placeholder.com/60" alt="Cover">
+                    </div>
+                    <div class="player-text-meta">
+                        <span id="player-title">// NO_SIGNAL</span>
+                        <span id="player-artist">SYSTEM_IDLE</span>
+                    </div>
+                </div>
+
+                <!-- Bloque Central: Controles y Barra de progreso -->
+                <div class="player-controls-block">
+                    <div class="player-buttons">
+                        <button id="btn-player-prev" class="btn-player-ctrl" title="Anterior">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+                        </button>
+                        <button id="btn-player-play-pause" class="btn-player-ctrl btn-play-main" title="Play/Pause">
+                            <!-- Iniciamos con icono de Play -->
+                            <svg id="icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                            <svg id="icon-pause" viewBox="0 0 24 24" fill="currentColor" class="hidden"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        </button>
+                        <button id="btn-player-next" class="btn-player-ctrl" title="Siguiente">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6zm9-12v12h2V6z"/></svg>
+                        </button>
+                    </div>
+
+                    <div class="player-timeline">
+                        <span id="time-current" class="time-stamp">0:00</span>
+                        <div class="slider-container">
+                            <input type="range" id="player-progress-bar" min="0" max="100" value="0">
+                            <div id="player-progress-fill" class="progress-fill"></div>
+                        </div>
+                        <span id="time-total" class="time-stamp">0:00</span>
+                    </div>
+                </div>
+
+                <!-- Bloque Derecho: Control de Volumen Extra -->
+                <div class="player-extra-controls">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    </svg>
+                    <input type="range" id="player-volume" min="0" max="1" step="0.05" value="0.7">
+                </div>
+            </div>
+        </footer>
+
     </section>
 
 

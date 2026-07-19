@@ -1160,3 +1160,215 @@ body.theme-dark .card-fans {
 .album-meta-item strong {
     color: var(--color-acento);
 }
+
+/* ======================================================================
+   10. MAQUETACIÓN DEL REPRODUCTOR DE AUDIO GLOBAL
+   ====================================================================== */
+
+#music-player-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 90px;
+    background-color: var(--color-reproductor);
+    border-top: 2px solid var(--color-acento);
+    padding: 10px 30px;
+    z-index: 100;
+    box-shadow: 0 -5px 20px rgba(148, 6, 184, 0.15);
+    transition: var(--transicion-suave);
+}
+
+.player-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    gap: 20px;
+}
+
+/* Bloque Izquierdo: Metadata */
+.player-track-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 30%;
+    min-width: 180px;
+}
+
+.player-img-wrapper {
+    width: 55px;
+    height: 55px;
+    border: 1px solid var(--color-acento);
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: #000;
+    flex-shrink: 0;
+}
+
+.player-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.player-text-meta {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#player-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--texto-principal);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#player-artist {
+    font-size: 0.75rem;
+    color: var(--texto-secundario);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Bloque Central: Controles y Línea de Tiempo */
+.player-controls-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 40%;
+}
+
+.player-buttons {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.btn-player-ctrl {
+    background: transparent;
+    border: none;
+    color: var(--texto-principal);
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    transition: var(--transicion-suave);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-player-ctrl hover {
+    color: var(--color-acento);
+    transform: scale(1.1);
+}
+
+.btn-player-ctrl svg {
+    width: 20px;
+    height: 20px;
+}
+
+.btn-player-ctrl.btn-play-main {
+    background-color: var(--color-acento);
+    color: #FFF;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    box-shadow: 0 0 10px rgba(148, 6, 184, 0.4);
+}
+
+.btn-player-ctrl.btn-play-main:hover {
+    background-color: var(--color-hover);
+    box-shadow: 0 0 15px var(--color-acento);
+}
+
+.btn-player-ctrl.btn-play-main svg {
+    width: 22px;
+    height: 22px;
+}
+
+/* Línea de Tiempo Customizada */
+.player-timeline {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 10px;
+}
+
+.time-stamp {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
+    color: var(--texto-secundario);
+    min-width: 35px;
+}
+
+.slider-container {
+    position: relative;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+}
+
+.player-timeline input[type="range"],
+.player-extra-controls input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    background: rgba(148, 6, 184, 0.15);
+    height: 5px;
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+}
+
+/* El "puntero" del deslizador */
+.player-timeline input[type="range"]::-webkit-slider-thumb,
+.player-extra-controls input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--color-acento);
+    box-shadow: 0 0 8px var(--color-acento);
+    transition: transform 0.1s;
+}
+
+.player-timeline input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.3);
+}
+
+/* Bloque Derecho: Volumen */
+.player-extra-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 20%;
+    justify-content: flex-end;
+    min-width: 120px;
+}
+
+.player-extra-controls input[type="range"] {
+    width: 80px;
+}
+
+/* Ajustes Responsive */
+@media (max-width: 768px) {
+    #music-player-bar {
+        padding: 10px 15px;
+    }
+    .player-extra-controls {
+        display: none; /* Ocultamos volumen en móviles para ahorrar espacio */
+    }
+    .player-track-info {
+        width: 40%;
+    }
+    .player-controls-block {
+        width: 55%;
+    }
+}

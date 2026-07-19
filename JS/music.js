@@ -1,6 +1,7 @@
 // ======================================================================
-// JS/music.js - MÓDULO DE MÚSICA Y API DEEZER (Refactorizado)
+// JS/music.js - MÓDULO DE MÚSICA Y API DEEZER
 // ======================================================================
+import { setTracklistYReproducir } from './player.js';
 
 const BASE_API_URL = 'https://api.deezer.com';
 
@@ -176,9 +177,12 @@ async function cargarPerfilArtista(artistId) {
 
         let tracksHtml = '';
         if (tracksData.data && tracksData.data.length > 0) {
+            // Guardamos temporalmente en el objeto global Window para simplificar el disparo desde HTML en strings
+            window.currentTracksContext = tracksData.data;
+
             tracksData.data.forEach((track, index) => {
                 tracksHtml += `
-                    <div class="track-row" onclick="console.log('Reproduciendo cancion id: ${track.id}')" style="cursor:pointer;">
+                    <div class="track-row" onclick="window.playTrackDesdeContexto(${index})" style="cursor:pointer;">
                         <span class="track-num">0${index + 1}</span>
                         <div class="track-meta">
                             <span class="track-title">${track.title}</span>
@@ -295,9 +299,11 @@ async function cargarVistaDetalleAlbum(albumId) {
 
         let tracklistHtml = '';
         if (tracksData.data && tracksData.data.length > 0) {
+            window.currentTracksContext = tracksData.data;
+
             tracksData.data.forEach((track, index) => {
                 tracklistHtml += `
-                    <div class="track-row" onclick="console.log('Reproduciendo track de album: ${track.id}')" style="cursor:pointer;">
+                    <div class="track-row" onclick="window.playTrackDesdeContexto(${index})" style="cursor:pointer;">
                         <span class="track-num">${index + 1 < 10 ? '0' : ''}${index + 1}</span>
                         <div class="track-meta">
                             <span class="track-title">${track.title}</span>
@@ -345,3 +351,10 @@ function formatDuration(segundos) {
     const secs = segundos % 60;
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 }
+
+// Puente global para ejecutar canciones desde el atributo onclick del HTML generado dinámicamente
+window.playTrackDesdeContexto = function(index) {
+    if (window.currentTracksContext) {
+        setTracklistYReproducir(window.currentTracksContext, index);
+    }
+};
