@@ -163,6 +163,11 @@ function reproducirTrackActual() {
         return;
     }
 
+    const metaContainer = document.getElementById('player-meta-content');
+    if (metaContainer) {
+        metaContainer.classList.remove('hidden'); // Al quitar 'hidden', hereda el 'display: flex' de tu CSS
+    }
+
     // Cambiar origen del audio
     audio.src = track.preview;
     

@@ -1516,3 +1516,35 @@ body.theme-dark .card-fans {
     display: none !important;
 }
 
+/* Corrección de dimensiones para el contenedor dinámico del reproductor */
+#player-meta-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    height: 100%;
+    width: 100%;
+}
+
+/* Forzar límites estrictos al contenedor de la carátula para que no se salga */
+#player-meta-content .player-cover-wrapper {
+    width: 60px;  /* Ajusta este tamaño al alto aproximado de tu barra inferior */
+    height: 60px;
+    min-width: 60px;
+    max-height: 60px;
+    overflow: hidden;
+    border-radius: 4px; /* Un pequeño toque industrial */
+    border: 1px solid var(--color-acento); /* Opcional: Borde neón a la carátula */
+}
+
+/* La imagen debe llenar su caja contenedora de forma responsiva */
+#player-meta-content .player-cover-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Recorta la imagen proporcionalmente */
+    display: block;
+}
+
+/* Asegurar que la clase hidden use !important para evitar conflictos */
+#player-meta-content.hidden {
+    display: none !important;
+}

@@ -211,12 +211,15 @@
             <div class="player-wrapper">
                 <!-- Bloque Izquierdo: Info de la canción actual -->
                 <div class="player-track-info">
-                    <div class="player-img-wrapper">
-                        <img id="player-cover" src="https://via.placeholder.com/60" alt="Cover">
-                    </div>
-                    <div class="player-text-meta">
-                        <span id="player-title">// NO_SIGNAL</span>
-                        <span id="player-artist">SYSTEM_IDLE</span>
+                    <!-- El contenedor intermedio ya NO lleva estilos inline, solo la clase de inicio oculto -->
+                    <div id="player-meta-content" class="hidden">
+                        <div class="player-cover-wrapper">
+                            <img id="player-cover" src="" alt="Cover Art">
+                        </div>
+                        <div class="player-text-meta">
+                            <h4 id="player-title"></h4>
+                            <p id="player-artist"></p>
+                        </div>
                     </div>
                 </div>
 
