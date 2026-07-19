@@ -23,9 +23,16 @@ export function inicializarReproductor() {
     playerTitle = document.getElementById('player-title');
     playerArtist = document.getElementById('player-artist');
 
+    const volumeSlider = document.getElementById('player-volume');
     const btnPrev = document.getElementById('btn-player-prev');
     const btnNext = document.getElementById('btn-player-next');
-    const volumeSlider = document.getElementById('player-volume');
+
+    const btnMute = document.getElementById('btn-player-mute');
+    const iconVolOn = document.getElementById('icon-volume-on');
+    const iconVolMute = document.getElementById('icon-volume-mute');
+
+    // Variable en memoria para recordar el volumen previo al silenciar
+    let volumenPrevio = volumeSlider ? volumeSlider.value : 0.7;
 
     if (!audio) return;
 
@@ -80,10 +87,46 @@ export function inicializarReproductor() {
         audio.currentTime = nuevoTiempo;
     });
 
-    // Control de volumen dinámico
-    if (volumeSlider) {
+    // Control de volumen dinámico y mutear
+    if (volumeSlider && btnMute) {
+        
+        // Evento 1: Clic en el botón del altavoz
+        btnMute.addEventListener('click', () => {
+            if (audio.muted) {
+                // Desmutear: restaurar estados anteriores
+                audio.muted = false;
+                audio.volume = volumenPrevio;
+                volumeSlider.value = volumenPrevio;
+                
+                iconVolOn.classList.remove('hidden');
+                iconVolMute.classList.add('hidden');
+            } else {
+                // Mutear: guardar volumen actual y poner a 0
+                volumenPrevio = audio.volume;
+                audio.muted = true;
+                volumeSlider.value = 0;
+                
+                iconVolOn.classList.add('hidden');
+                iconVolMute.classList.remove('hidden');
+            }
+        });
+
+        // Evento 2: Si el usuario arrastra el slider manualmente
         volumeSlider.addEventListener('input', (e) => {
-            audio.volume = e.target.value;
+            const nuevoVolumen = parseFloat(e.target.value);
+            audio.volume = nuevoVolumen;
+            
+            if (nuevoVolumen === 0) {
+                audio.muted = true;
+                iconVolOn.classList.add('hidden');
+                iconVolMute.classList.remove('hidden');
+            } else {
+                audio.muted = false;
+                audio.volume = nuevoVolumen;
+                volumenPrevio = nuevoVolumen; // Actualizar memoria
+                iconVolOn.classList.remove('hidden');
+                iconVolMute.classList.add('hidden');
+            }
         });
     }
 

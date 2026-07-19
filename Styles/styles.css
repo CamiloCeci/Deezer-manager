@@ -1357,6 +1357,27 @@ body.theme-dark .card-fans {
     width: 80px;
 }
 
+.player-extra-controls .btn-player-ctrl {
+    background: transparent;
+    border: none;
+    color: var(--texto-principal);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: var(--transicion-suave);
+}
+
+.player-extra-controls .btn-player-ctrl:hover {
+    color: var(--color-acento);
+}
+
+/* Reasegurar que la clase hidden funcione correctamente */
+.player-extra-controls .hidden {
+    display: none !important;
+}
+
 /* Ajustes Responsive */
 @media (max-width: 768px) {
     #music-player-bar {
@@ -1494,3 +1515,4 @@ body.theme-dark .card-fans {
 #cyber-popup-overlay.hidden {
     display: none !important;
 }
+
