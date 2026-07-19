@@ -1,3 +1,5 @@
+import { mostrarCyberPopup } from './popup.js';
+
 // Estado de la lista de tracks en reproducción actual
 let playlistActual = [];
 let indiceActual = -1;
@@ -29,6 +31,17 @@ export function inicializarReproductor() {
 
     // --- EVENTOS DEL AUDIO ENGINE ---
     
+    // Capturar fallos de carga o reproducción en tiempo real
+    audio.addEventListener('error', (e) => {
+        console.error("Error en el elemento de audio:", e);
+        playerTitle.textContent = "// DECRYPT_FAILED";
+        playerArtist.textContent = "STREAM_CORRUPTED";
+        
+        // Cambio aquí:
+        mostrarCyberPopup(`// ERROR_CRÍTICO: No se pudo obtener el audio. Selecciona otro artista por favor ;)`);
+        
+    });
+
     // Actualización del tiempo transcurrido
     audio.addEventListener('timeupdate', () => {
         if (!audio.duration) return;
@@ -98,8 +111,12 @@ export function setTracklistYReproducir(tracks, index) {
  */
 function reproducirTrackActual() {
     const track = playlistActual[indiceActual];
-    if (!track || !track.preview) {
-        console.error("Este track no cuenta con preview multimedia de Deezer.");
+    
+    // Si el track no existe o no tiene preview, disparamos el error manualmente
+    if (!track || !track.preview || track.preview.trim() === "") {
+        // Cambio aquí:
+        mostrarCyberPopup(`// CORRUPTED_FILE: La firma digital de la pista no contiene un stream multimedia válido.`);
+        siguienteCancion();
         return;
     }
 

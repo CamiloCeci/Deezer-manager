@@ -2,6 +2,7 @@
 // JS/music.js - MÓDULO DE MÚSICA Y API DEEZER
 // ======================================================================
 import { setTracklistYReproducir } from './player.js';
+import { mostrarCyberPopup } from './popup.js';
 
 const BASE_API_URL = 'https://api.deezer.com';
 
@@ -175,20 +176,28 @@ async function cargarPerfilArtista(artistId) {
             fetchSeguro(`${BASE_API_URL}/artist/${artistId}/top?limit=5`)
         ]);
 
-        let tracksHtml = '';
+        let tracksHtml = ''; 
+        
         if (tracksData.data && tracksData.data.length > 0) {
-            // Guardamos temporalmente en el objeto global Window para simplificar el disparo desde HTML en strings
             window.currentTracksContext = tracksData.data;
 
             tracksData.data.forEach((track, index) => {
+                // Validación de la preview
+                const tienePreview = track.preview && track.preview.trim() !== "";
+                const claseDesactivada = tienePreview ? "" : "track-disabled";
+                const accionClick = tienePreview 
+                    ? `window.playTrackDesdeContexto(${index})` 
+                    : `window.mostrarErrorTrack('${track.title.replace(/'/g, "\\'")}')`; // Protección por si el título tiene comillas
+
+                // Concatenamos exactamente en tracksHtml
                 tracksHtml += `
-                    <div class="track-row" onclick="window.playTrackDesdeContexto(${index})" style="cursor:pointer;">
-                        <span class="track-num">0${index + 1}</span>
+                    <div class="track-row ${claseDesactivada}" onclick="${accionClick}" style="cursor:pointer;">
+                        <span class="track-num">${index + 1 < 10 ? '0' : ''}${index + 1}</span>
                         <div class="track-meta">
                             <span class="track-title">${track.title}</span>
                             <span class="track-album-name">${track.album.title}</span>
                         </div>
-                        <span class="track-duration">${formatDuration(track.duration)}</span>
+                        <span class="track-duration">${tienePreview ? formatDuration(track.duration) : '[RESTRICTED]'}</span>
                     </div>
                 `;
             });
@@ -298,17 +307,24 @@ async function cargarVistaDetalleAlbum(albumId) {
         const numCanciones = albumMeta.nb_tracks || (tracksData.data ? tracksData.data.length : 0);
 
         let tracklistHtml = '';
+        
         if (tracksData.data && tracksData.data.length > 0) {
             window.currentTracksContext = tracksData.data;
 
             tracksData.data.forEach((track, index) => {
+                const tienePreview = track.preview && track.preview.trim() !== "";
+                const claseDesactivada = tienePreview ? "" : "track-disabled";
+                const accionClick = tienePreview 
+                    ? `window.playTrackDesdeContexto(${index})` 
+                    : `window.mostrarErrorTrack('${track.title.replace(/'/g, "\\'")}')`;
+
                 tracklistHtml += `
-                    <div class="track-row" onclick="window.playTrackDesdeContexto(${index})" style="cursor:pointer;">
+                    <div class="track-row ${claseDesactivada}" onclick="${accionClick}" style="cursor:pointer;">
                         <span class="track-num">${index + 1 < 10 ? '0' : ''}${index + 1}</span>
                         <div class="track-meta">
                             <span class="track-title">${track.title}</span>
                         </div>
-                        <span class="track-duration">${formatDuration(track.duration)}</span>
+                        <span class="track-duration">${tienePreview ? formatDuration(track.duration) : '[RESTRICTED]'}</span>
                     </div>
                 `;
             });
@@ -357,4 +373,10 @@ window.playTrackDesdeContexto = function(index) {
     if (window.currentTracksContext) {
         setTracklistYReproducir(window.currentTracksContext, index);
     }
+};
+
+// Alerta temática para canciones sin preview en la API
+window.mostrarErrorTrack = function(tituloCancion) {
+    const msg = `// SECURITY_ALERT: El archivo para <strong>"${tituloCancion.toUpperCase()}"</strong> no está en Deezer.<br><br>Lo sentimos, selecciona otro artista en el buscador para continuar escuchando música sin interrupciones.`;
+    mostrarCyberPopup(msg);
 };

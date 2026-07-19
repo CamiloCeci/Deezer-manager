@@ -1372,3 +1372,125 @@ body.theme-dark .card-fans {
         width: 55%;
     }
 }
+
+/* Fila de canción no disponible */
+.track-row.track-disabled {
+    opacity: 0.4;
+    cursor: not-allowed !important;
+    border-left: 3px solid #ff0055 !important; /* Indicador rojo de bloqueado */
+    background-color: rgba(255, 0, 85, 0.02);
+}
+
+.track-row.track-disabled:hover {
+    background-color: rgba(255, 0, 85, 0.05) !important;
+    box-shadow: none !important;
+}
+
+.track-row.track-disabled .track-title {
+    text-decoration: line-through; /* Tacha el título sutilmente */
+}
+
+.track-row.track-disabled .track-num {
+    color: #ff0055; /* Número en rojo */
+}
+
+/* ======================================================================
+   11. MODAL / POP-UP EMBEBIDO DEL SISTEMA
+   ====================================================================== */
+
+#cyber-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.85); /* Mantenemos el fondo oscuro exterior para centrar la atención */
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.3s ease;
+}
+
+.cyber-popup-box {
+    /* Usamos variables del sistema para el intercambio Claro/Oscuro */
+    background-color: var(--color-reproductor, #0d0214); 
+    border: 2px solid var(--color-acento);
+    width: 90%;
+    max-width: 480px;
+    padding: 24px;
+    box-shadow: 0 0 25px rgba(148, 6, 184, 0.4);
+    position: relative;
+    font-family: 'Orbitron', sans-serif;
+    border-radius: 4px;
+}
+
+.cyber-popup-header {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 18px;
+}
+
+.cyber-popup-tag {
+    font-size: 0.85rem;
+    color: var(--color-acento);
+    letter-spacing: 2px;
+    font-weight: 700;
+}
+
+.cyber-popup-glitch-line {
+    height: 2px;
+    background: linear-gradient(90deg, var(--color-acento) 0%, transparent 100%);
+    width: 100%;
+}
+
+.cyber-popup-body {
+    margin-bottom: 25px;
+}
+
+#cyber-popup-text {
+    font-size: 0.95rem;
+    /* Forzamos el texto principal del tema para garantizar el contraste de lectura */
+    color: var(--texto-principal); 
+    line-height: 1.6;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: 600;
+}
+
+/* Enfatizar elementos internos del texto */
+#cyber-popup-text strong {
+    color: var(--color-acento);
+    font-weight: 700;
+}
+
+.cyber-popup-footer {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-cyber-action {
+    background: transparent;
+    /* Usamos el color de acento o el texto principal según el tema para que resalte */
+    border: 2px solid var(--color-acento);
+    color: var(--texto-principal);
+    padding: 10px 20px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-weight: 700;
+    font-family: 'Orbitron', sans-serif;
+    transition: var(--transicion-suave);
+    text-transform: uppercase;
+}
+
+.btn-cyber-action:hover {
+    background-color: var(--color-acento);
+    color: #FFFFFF !important; /* Texto blanco en hover para contraste absoluto */
+    box-shadow: 0 0 15px var(--color-acento);
+    text-shadow: none;
+}
+
+#cyber-popup-overlay.hidden {
+    display: none !important;
+}
