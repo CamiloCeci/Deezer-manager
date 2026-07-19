@@ -45,9 +45,13 @@ body {
     font-family: 'Space Grotesk', sans-serif;
     background-color: var(--bg-principal);
     color: var(--texto-principal);
-    transition: var(--transicion-suave); /* Cambia el tema con una transición suave */
+    transition: var(--transicion-suave);
     min-height: 100vh;
-    overflow-x: hidden;
+    
+    /* ANTI-SCROLL HORIZONTAL ABSOLUTO */
+    width: 100vw;
+    max-width: 100%;
+    overflow-x: hidden !important;
 }
 
 /* CLASE CRÍTICA: Oculta secciones completas de forma absoluta */
@@ -76,6 +80,9 @@ body {
         "sidebar main"
         "player player";
     min-height: 100vh;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden !important;
 }
 
 #sidebar {
@@ -701,7 +708,7 @@ body {
 .search-prompt {
     font-family: 'Orbitron', sans-serif;
     color: var(--color-acento);
-    font-size: 0.9rem;
+    font-size: 0.7rem;
     font-weight: 700;
 }
 
@@ -1568,4 +1575,432 @@ body.theme-dark .card-fans {
 /* Asegurar que la clase hidden use !important para evitar conflictos */
 #player-meta-content.hidden {
     display: none !important;
+}
+
+/* ======================================================================
+   12. ARQUITECTURA ULTRA-RESPONSIVA (MÓVILES Y TABLETS)
+   ====================================================================== */
+@media (max-width: 768px) {
+    
+    /* 1. Reestructurar el Grid Principal */
+    #app-layout {
+        display: flex;
+        flex-direction: column; /* Apila el contenido verticalmente */
+        min-height: 100vh;
+    }
+
+    .featured-artists-grid, 
+    .albums-cyber-grid {
+        grid-template-columns: 1fr !important; 
+        gap: 15px; /* Un espaciado vertical uniforme entre bloques */
+    }
+
+    /* Rediseño de la tarjeta para formato horizontal cómodo en móviles */
+    .featured-artist-card,
+    .album-card {
+        height: auto !important; /* Eliminamos la altura fija de escritorio */
+        flex-direction: row !important; /* Pasamos de vertical a horizontal */
+        align-items: center;
+        text-align: left !important; /* Texto alineado al flujo de lectura */
+        gap: 15px;
+        padding: 12px !important;
+        width: 100%;
+    }
+
+    /* Ajuste para que la imagen no se deforme en el nuevo flujo horizontal */
+    .card-img-wrapper,
+    .album-img-wrapper {
+        width: 70px !important;
+        height: 70px !important;
+        min-width: 70px !important;
+        margin-bottom: 0 !important; /* Quitamos el margen inferior de desktop */
+    }
+
+    /* Alinear la información al lado de la imagen */
+    .card-info,
+    .album-card-info {
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .card-info h3,
+    .album-card h4 {
+        font-size: 1rem !important;
+        white-space: normal !important; /* Permite que el texto largo salte de línea si es necesario */
+    }
+
+
+    /* 2. Transformación del Sidebar a Barra de Iconos Inferior */
+    #sidebar {
+        position: sticky;
+        top: 0;
+        left: 0;
+        width: 100vw; /* Toma el 100% del ancho del dispositivo */
+        max-width: 100%;
+        height: 60px;
+        background-color: #120917; /* Tu base oscura cyberpunk */
+        border-right: none;
+        border-bottom: 2px solid var(--color-acento);
+        padding: 0;
+        z-index: 100;
+        box-shadow: 0 4px 15px rgba(148, 6, 184, 0.2);
+        overflow: hidden;
+    }
+
+    .sidebar-wrapper {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+        height: 100% !important;
+        overflow: visible !important;
+    }
+
+    /* CORRECCIÓN: AQUÍ SOLO OCULTAMOS EL PANEL DE USUARIO */
+    .user-profile-panel {
+        display: none !important;
+    }
+
+    /* Redistribuir los botones de navegación */
+    .sidebar-nav, 
+    .sidebar-footer {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        gap: 5px !important;
+    }
+
+    .sidebar-nav {
+        width: 50%;
+        justify-content: space-around;
+    }
+
+    .sidebar-footer {
+        width: 50% !important;
+        justify-content: space-around !important;
+    }
+
+    /* Estilo unificado para los 4 botones (2 de nav + 2 de sistema) */
+    .nav-link,
+    .btn-system-toggle,
+    .btn-system-logout {
+        font-size: 0 !important; /* Apaga el texto por completo */
+        background: transparent !important;
+        border: none !important;
+        padding: 10px !important;
+        margin: 0 !important;
+        display: inline-flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        cursor: pointer;
+        text-decoration: none;
+        width: 44px; /* Área de toque óptima */
+        height: 44px;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    /* Forzar que los SVGs o iconos se pinten y tengan tamaño real */
+    .nav-link .nav-icon,
+    .btn-system-toggle svg,
+    .btn-system-logout svg,
+    .btn-system-toggle i,
+    .btn-system-logout i {
+        width: 22px !important;
+        height: 22px !important;
+        min-width: 22px !important;
+        min-height: 22px !important;
+        display: block !important;
+        fill: currentColor !important; /* Obliga al SVG a heredar el color del texto */
+        transition: transform 0.2s ease;
+    }
+
+    .nav-link:hover, .nav-link.active,
+    .btn-system-toggle:hover,
+    .btn-system-logout:hover {
+        color: var(--color-acento) !important;
+    }
+
+    .btn-system-toggle:active,
+    .btn-system-logout:active {
+        transform: scale(0.9);
+    }
+
+    /* BLINDAJE ABSOLUTO PARA EL SVG DE CERRAR SESIÓN */
+    .btn-system-logout svg.nav-icon {
+        display: block !important;
+        content: none !important; /* Evita que selectores ::before inyecten iconos de fuentes */
+    }
+
+    /* Si tu compañero editó los trazos, nos aseguramos de que use líneas (stroke) y no relleno (fill) */
+    .btn-system-logout svg.nav-icon path,
+    .btn-system-logout svg.nav-icon line {
+        stroke-width: 2 !important;
+        fill: none !important; /* Si se activa un fill por error, el círculo se deforma y puede parecer una fruta */
+    }
+
+    .nav-link {
+        padding: 10px;
+        font-size: 0; /* Oculta el texto de manera segura manteniendo el icono */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: none;
+        background: transparent;
+    }
+
+    .nav-link .nav-icon {
+        width: 22px; /* Iconos ligeramente más grandes para facilitar el toque táctil */
+        height: 22px;
+    }
+
+    .nav-link:hover, .nav-link.active {
+        background: transparent;
+        color: var(--color-acento);
+    }
+
+    /* 3. Ajuste del Buscador para que sobrepase la barra al estar arriba */
+    .search-bar-container {
+        position: relative;
+        z-index: 105; /* ¡Clave! Mayor que el del sidebar (100) para que flote por encima al hacer scroll hacia el top */
+        margin-bottom: 10px;
+    }
+
+    /* 4. Ajuste Adaptable del Contenido Principal */
+    #main-content {
+        padding: 15px;
+        margin-bottom: 90px; /* Espacio libre abajo estrictamente para el reproductor */
+        width: 100%;
+    }
+
+    /* Vistas de encabezados adaptadas */
+    .artist-hero-header, .album-horizontal-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px;
+        gap: 15px;
+    }
+
+    .artist-big-img, .album-horizontal-img {
+        width: 120px;
+        height: 120px;
+    }
+
+    .artist-name-title, .album-horizontal-title {
+        font-size: 1.6rem;
+    }
+
+    .artist-stats-grid, .album-meta-grid {
+        flex-direction: column;
+        gap: 5px;
+        align-items: center;
+    }
+
+    /* Filas de canciones más compactas */
+    .track-row {
+        grid-template-columns: 35px 1fr 50px;
+        padding: 10px;
+    }
+
+    /* 4. REDISEÑO DEL REPRODUCTOR DE AUDIO FLOTANTE (Ancho estricto sin desbordamiento) */
+    #music-player-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100vw;
+        max-width: 100%;
+        height: 80px; /* Un poco más compacto */
+        
+        /* Margen de seguridad interno muy sutil */
+        padding: 8px 10px; 
+        box-sizing: border-box;
+        
+        border-top: 2px solid var(--color-acento);
+        background-color: rgba(21, 13, 25, 0.96);
+        backdrop-filter: blur(10px);
+        z-index: 110;
+        overflow: hidden;
+    }
+
+    .player-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        height: 100%;
+        gap: 10px;
+    }
+
+    /* BLOQUE IZQUIERDO: Carátula ultra-pequeña con márgenes mínimos */
+    .player-track-info {
+        width: 45px !important; /* Ancho fijo mínimo ajustado a la imagen */
+        min-width: 45px !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0 !important;
+    }
+
+    #player-meta-content .player-cover-wrapper {
+        width: 38px !important;  /* Dimensión reducida */
+        height: 38px !important;
+        min-width: 38px !important;
+        max-height: 38px !important;
+        border: 1px solid var(--color-acento);
+        border-radius: 3px;
+        /* Un par de píxeles de aire respecto a los bordes verticales del contenedor */
+        margin: auto 0; 
+    }
+
+    /* ELIMINAR EL TEXTO COMPLETAMENTE EN MÓVILES */
+    .player-text-meta {
+        display: none !important;
+    }
+
+    /* BLOQUE CENTRAL: Toma el control absoluto de la barra (Aprox 80% del ancho) */
+    .player-controls-block {
+        flex-grow: 1; /* Se estira para ocupar todo el espacio libre central */
+        width: auto !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px !important;
+    }
+
+    .player-buttons {
+        gap: 14px !important; /* Botones cómodos para pulsar con el dedo */
+    }
+
+    .btn-player-ctrl {
+        width: 32px !important;
+        height: 32px !important;
+    }
+
+    .btn-player-ctrl.btn-play-main {
+        width: 38px !important;
+        height: 38px !important;
+    }
+
+    .player-timeline {
+        width: 100% !important;
+        gap: 8px !important;
+        padding: 0 4px;
+    }
+
+    .time-stamp {
+        font-size: 0.7rem !important;
+        min-width: 30px !important;
+    }
+
+    /* BLOQUE DERECHO: Re-activado SOLO para el icono de mutear */
+    .player-extra-controls {
+        display: flex !important; /* Lo hacemos visible de nuevo */
+        width: 35px !important;   /* Espacio justo para un botón */
+        min-width: 35px !important;
+        justify-content: center;
+        align-items: center;
+        gap: 0 !important;
+    }
+
+    /* Ocultamos estrictamente la barra deslizadora de volumen */
+    .player-extra-controls input[type="range"] {
+        display: none !important;
+    }
+
+    /* El botón de volumen/mute ahora queda perfectamente centrado en su espacio */
+    .player-extra-controls .btn-player-ctrl {
+        width: 32px !important;
+        height: 32px !important;
+        margin: 0;
+    }
+
+    /* Disminuir drásticamente el título de la sección de búsqueda */
+    .search-section-title, 
+    #main-content h2, 
+    .search-container h1 { 
+        font-size: 1rem !important; /* Escala cyberpunk compacta */
+        letter-spacing: 1px !important;
+        margin-bottom: 8px !important;
+        text-transform: uppercase;
+    }
+
+    .search-container h1,
+    .search-section-title,
+    [data-title="sistema-busqueda"], /* Por si usas un atributo de datos */
+    #search-title-element { /* Cambia esto por la clase/ID exacta si difiere */
+        font-size: 0.85rem !important; /* Tamaño tipo etiqueta/subtítulo */
+        font-weight: 700;
+        letter-spacing: 2px !important;
+        color: var(--color-acento); /* Mantiene la estética cyberpunk sin estorbar */
+        margin: 0 0 10px 0 !important; /* Margen inferior limpio, 0 a los lados */
+        width: 100% !important;
+        display: block !important; /* Se posiciona ARRIBA del input, nunca al lado */
+        text-align: left;
+    }
+
+    /* Control total del contenedor de la barra para evitar desbordamientos */
+    .search-bar-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box;
+        padding: 0 4px; /* Un pequeño colchón interno */
+    }
+
+    .search-header-block,
+    .search-container {
+        display: flex !important;
+        flex-direction: column !important; /* Los apila: Título arriba, Input abajo */
+        align-items: flex-start !important;
+        width: 100% !important;
+        gap: 5px !important;
+    }
+
+    /* Ajustar el input para que el placeholder quepa sin romperse */
+    .search-bar-container input,
+    #search-input,
+    .search-input-field {
+        width: 100% !important;
+        font-size: 0.85rem !important; /* Reducimos el tamaño de la fuente de escritura */
+        padding: 10px 12px 10px 35px !important; /* Espacio para el icono de lupa a la izquierda */
+        box-sizing: border-box;
+    }
+
+    .search-bar-container,
+    .search-input-wrapper {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex-grow: 1 !important; /* Le dice al input: "Toma todo el espacio que el título liberó" */
+    }
+
+    /* Forzar al Placeholder a encogerse y mantenerse en una sola línea limpia */
+    .search-bar-container input::placeholder,
+    #search-input::placeholder {
+        font-size: 0.8rem !important; /* Letra compacta para el texto informativo */
+        white-space: nowrap !important; /* Evita que el texto salte a dos líneas */
+        overflow: hidden !important;
+        text-overflow: ellipsis !important; /* Si aun así es muy largo, pone "..." de forma elegante */
+        opacity: 0.7;
+    }
+
+    .search-bar-container input {
+        font-size: 0.95rem !important; /* Aumentamos un pelo para leer bien lo que escribes */
+        height: 42px !important; /* Altura cómoda para móviles */
+        width: 100% !important;
+    }
+}
+
+/* Optimización extra para pantallas ultra pequeñas (Smartphones compactos) */
+@media (max-width: 400px) {
+    #player-meta-content .player-cover-wrapper {
+        display: none; /* Quitamos la mini-carátula si no hay espacio horizontal */
+    }
+    .player-track-info {
+        width: 45%;
+    }
+    .player-controls-block {
+        width: 55%;
+    }
 }
