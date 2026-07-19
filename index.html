@@ -216,7 +216,7 @@
                 <div class="search-bar-container">
                     <form id="search-form" class="cyber-search-form">
                         <div class="search-input-group">
-                            <span class="search-prompt">SYSTEM_SEARCH_>&nbsp;</span>
+                            <span class="search-prompt">SISTEMA_DE_BÚSQUEDA&nbsp;</span>
                             <input type="text" id="input-search-artist" required placeholder="Introduce el nombre del artista a consultar..." autocomplete="off">
                             <button type="submit" class="btn-search-submit">
                                 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -233,7 +233,7 @@
                     
                     <!-- SUB-VISTA A: DESTACADOS DE HOY -->
                     <div id="view-featured-artists" class="">
-                        <h2 class="section-cyber-title">// FEATURED_ARTISTS_TODAY [LIMIT_10]</h2>
+                        <h2 class="section-cyber-title">// ARTISTAS_DESTACADOS_HOY</h2>
                         <div id="featured-grid" class="featured-artists-grid">
                             <!-- Inyectado por JS -->
                         </div>
@@ -242,7 +242,7 @@
                     <!-- SUB-VISTA B: DETALLE COMPLETO DEL ARTISTA -->
                     <div id="view-artist-profile" class="hidden">
                         <!-- Botón para retroceder ordenadamente -->
-                        <button id="btn-back-to-featured" class="btn-link-cyber"><&nbsp;RETURN_TO_PREVIOUS_PAGE</button>
+                        <button id="btn-back-to-featured" class="btn-link-cyber"><&nbsp;VOLVER_AL_TOP</button>
                         <div id="artist-profile-detail">
                             <!-- Inyectado por JS (Foto, álbumes paginados, singles) -->
                         </div>
@@ -260,9 +260,17 @@
                                 </svg>
                             </div>
                             <div class="empty-state-content">
-                                <h3>CRITICAL_ERROR: ARTIST_NOT_FOUND</h3>
+                                <h3>ERROR_CRÍTICO: ARTISTA_NO_ENCONTRADO</h3>
                                 <p>Lo sentimos, no encontramos a este artista, verifica su nombre e intentalo nuevamente.</p>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- SUB-VISTA D: DETALLE DE ÁLBUM PROPIO -->
+                    <div id="view-album-detail" class="hidden">
+                        <button id="btn-back-to-artist" class="btn-link-cyber"><&nbsp;VOLVER_AL_ARTISTA</button>
+                        <div id="album-profile-detail">
+                            <!-- Inyectado dinámicamente por JS -->
                         </div>
                     </div>
 

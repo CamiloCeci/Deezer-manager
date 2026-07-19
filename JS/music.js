@@ -1,5 +1,5 @@
 // ======================================================================
-// JS/music.js - MÓDULO DE MÚSICA Y API DEEZER (Programador 2)
+// JS/music.js - MÓDULO DE MÚSICA Y API DEEZER (Refactorizado)
 // ======================================================================
 
 const BASE_API_URL = 'https://api.deezer.com';
@@ -11,7 +11,6 @@ const ALBUMS_LIMIT = 5;
 
 /**
  * Función auxiliar para realizar fetch seguro a través de un Proxy CORS.
- * Previene el error 'TypeError: Failed to fetch' en todas las peticiones del módulo.
  */
 async function fetchSeguro(url) {
     const urlConProxy = `https://corsproxy.io/?${encodeURIComponent(url)}`;
@@ -37,10 +36,21 @@ function inicializarEventosBuscador() {
         });
     }
 
-    const btnBack = document.getElementById('btn-back-to-featured');
-    if (btnBack) {
-        document.getElementById('btn-back-to-featured').addEventListener('click', () => {
+    const btnBackFeatured = document.getElementById('btn-back-to-featured');
+    if (btnBackFeatured) {
+        btnBackFeatured.addEventListener('click', () => {
             switchSearchView('featured');
+        });
+    }
+
+    const btnBackArtist = document.getElementById('btn-back-to-artist');
+    if (btnBackArtist) {
+        btnBackArtist.addEventListener('click', () => {
+            if (currentArtistId) {
+                switchSearchView('profile');
+            } else {
+                switchSearchView('featured');
+            }
         });
     }
 }
@@ -49,62 +59,27 @@ function switchSearchView(vista) {
     const vFeatured = document.getElementById('view-featured-artists');
     const vProfile = document.getElementById('view-artist-profile');
     const vEmpty = document.getElementById('view-search-empty');
+    const vAlbum = document.getElementById('view-album-detail');
 
-    if(!vFeatured || !vProfile || !vEmpty) return;
+    if(!vFeatured || !vProfile || !vEmpty || !vAlbum) return;
 
     vFeatured.classList.add('hidden');
     vProfile.classList.add('hidden');
     vEmpty.classList.add('hidden');
+    vAlbum.classList.add('hidden');
 
     if (vista === 'featured') vFeatured.classList.remove('hidden');
     if (vista === 'profile') vProfile.classList.remove('hidden');
-    if (vista === 'empty') {
-        vEmpty.classList.remove('hidden');
-    }
+    if (vista === 'empty') vEmpty.classList.remove('hidden');
+    if (vista === 'album') vAlbum.classList.remove('hidden');
 }
 
-// TU LISTA DE CONTROL DE CALIDAD - SÓLO ESTOS ARTISTAS SE MOSTRARÁN
+// POOL DE ARTISTAS DESTACADOS
 const POOL_ARTISTAS_DESTACADOS = [
-    27,      /* Daft Punk */
-    4050207, /* Bruno Mars */
-    13,      /* Eminem */
-    384236,  /* Michael Jackson */
-    1188,    /* Rihanna */
-    288166,  /* Avicii */
-    51214042,/* Dua Lipa */
-    10583405,/* Billie Eilish */
-    413667,  /* The Weeknd */
-    8354140, /* Kygo */
-    144227,  /* Calvin Harris */
-    469614,  /* Lana Del Rey */
-    53457172,/* Olivia Rodrigo */
-    156224,  /* Kendrick Lamar */
-    12196,   /* Arctic Monkeys */
-    75798,   /* Muse */
-    10984,   /* Gorillaz */
-    90653,   /* David Guetta */
-    1156,    /* Kanye West */
-    614,     /* Red Hot Chili Peppers */
-    174,     /* Coldplay */
-    412,     /* Queen */
-    1245,    /* Metallica */
-    9635632, /* Travis Scott */
-    553315,  /* Ed Sheeran */
-    119,     /* Linkin Park */
-    1550,    /* AC/DC */
-    243,     /* Beyoncé */
-    1128144, /* Taylor Swift */
-    1424163, /* Justin Bieber */
-    1353625, /* Post Malone */
-    259362,  /* Drake */
-    4162,    /* Maroon 5 */
-    3540,    /* OneRepublic */
-    429665,  /* Bruno Mars */
-    4003311, /* Sia */
-    538155,  /* Marshmello */
-    6550777, /* Khalid */
-    12178,   /* Radiohead */
-    154      /* Green Day */
+    27, 4050207, 13, 384236, 1188, 288166, 51214042, 10583405, 413667, 8354140,
+    144227, 469614, 53457172, 156224, 12196, 75798, 10984, 90653, 1156, 614,
+    174, 412, 1245, 9635632, 553315, 119, 1550, 243, 1128144, 1424163,
+    1353625, 259362, 4162, 3540, 4003311, 538155, 6550777, 12178, 154
 ];
 
 async function cargarDestacadosAleatorios() {
@@ -114,9 +89,7 @@ async function cargarDestacadosAleatorios() {
     grid.innerHTML = `<div class="cyber-loader">SELECTING_RANDOM_ELITE_ARTISTS...</div>`;
 
     try {
-        // Garantizamos 10 índices únicos usando un Set directamente sobre la lista original existente
         const indicesSeleccionados = new Set();
-        
         while (indicesSeleccionados.size < 10 && indicesSeleccionados.size < POOL_ARTISTAS_DESTACADOS.length) {
             const indiceAleatorio = Math.floor(Math.random() * POOL_ARTISTAS_DESTACADOS.length);
             indicesSeleccionados.add(indiceAleatorio);
@@ -124,7 +97,6 @@ async function cargarDestacadosAleatorios() {
 
         const seleccionDiezIds = Array.from(indicesSeleccionados).map(index => POOL_ARTISTAS_DESTACADOS[index]);
 
-        // Mapeo Asíncrono Directo al recurso por ID único mediante el fetch seguro
         const promesasArtistas = seleccionDiezIds.map(async (id) => {
             try {
                 return await fetchSeguro(`${BASE_API_URL}/artist/${id}`);
@@ -197,7 +169,6 @@ async function cargarPerfilArtista(artistId) {
     switchSearchView('profile');
 
     try {
-        // Ejecución paralela protegida por el proxy de Deezer
         const [artistData, tracksData] = await Promise.all([
             fetchSeguro(`${BASE_API_URL}/artist/${artistId}`),
             fetchSeguro(`${BASE_API_URL}/artist/${artistId}/top?limit=5`)
@@ -234,10 +205,8 @@ async function cargarPerfilArtista(artistId) {
                 </div>
             </div>
 
-            <div id="album-tracks-preview" class="album-tracks-modal hidden"></div>
-
             <div class="albums-grid-section">
-                <h3 class="section-cyber-title">// PRODUCED_ALBUMS_CATALOG</h3>
+                <h3 class="section-cyber-title">// CATÁLOGO_DE_ALBUMS</h3>
                 <div id="artist-albums-container" class="albums-cyber-grid"></div>
                 <div id="load-more-albums-box" class="btn-load-more-container">
                     <button id="btn-load-more-albums" class="btn-cyber-outline">Ver más álbumes</button>
@@ -246,7 +215,7 @@ async function cargarPerfilArtista(artistId) {
 
             <div class="artist-content-body">
                 <div class="top-tracks-section">
-                    <h3 class="section-cyber-title">// TOP_5_ICONIC_SINGLES</h3>
+                    <h3 class="section-cyber-title">// SENCILLOS_ICÓNICOS</h3>
                     <div class="tracks-list-container">
                         ${tracksHtml}
                     </div>
@@ -283,8 +252,9 @@ async function fetchSiguienteBloqueAlbumes() {
                     <p>${album.release_date ? album.release_date.split('-')[0] : 'LP'}</p>
                 `;
                 
+                // CAMBIO CLAVE: Ahora redirige a la vista de álbum independiente
                 item.addEventListener('click', () => {
-                    cargarCancionesDeAlbum(album.id, album.title);
+                    cargarVistaDetalleAlbum(album.id);
                 });
 
                 contenedorAlbums.appendChild(item);
@@ -303,22 +273,31 @@ async function fetchSiguienteBloqueAlbumes() {
     }
 }
 
-async function cargarCancionesDeAlbum(albumId, albumTitle) {
-    const previewBox = document.getElementById('album-tracks-preview');
-    if (!previewBox) return;
+/**
+ * NUEVA FUNCIÓN: Consulta el álbum y sus canciones, cambiando el foco hacia la Sub-vista D.
+ */
+async function cargarVistaDetalleAlbum(albumId) {
+    const contenedorAlbum = document.getElementById('album-profile-detail');
+    if (!contenedorAlbum) return;
 
-    previewBox.innerHTML = `<div class="cyber-loader">RETRIEVING_ALBUM_TRACKLIST...</div>`;
-    previewBox.classList.remove('hidden');
-    previewBox.scrollIntoView({ behavior: 'smooth' });
+    contenedorAlbum.innerHTML = `<div class="cyber-loader">RETRIEVING_ALBUM_FULL_DOSSIER...</div>`;
+    switchSearchView('album');
 
     try {
-        const data = await fetchSeguro(`${BASE_API_URL}/album/${albumId}/tracks`);
+        // Obtenemos los metadatos completos del álbum (para año y cantidad de canciones) y sus tracks
+        const [albumMeta, tracksData] = await Promise.all([
+            fetchSeguro(`${BASE_API_URL}/album/${albumId}`),
+            fetchSeguro(`${BASE_API_URL}/album/${albumId}/tracks`)
+        ]);
+
+        const anioSalida = albumMeta.release_date ? albumMeta.release_date.split('-')[0] : 'N/A';
+        const numCanciones = albumMeta.nb_tracks || (tracksData.data ? tracksData.data.length : 0);
 
         let tracklistHtml = '';
-        if (data.data && data.data.length > 0) {
-            data.data.forEach((track, index) => {
+        if (tracksData.data && tracksData.data.length > 0) {
+            tracksData.data.forEach((track, index) => {
                 tracklistHtml += `
-                    <div class="track-row" onclick="console.log('Seleccionada track de album: ${track.id}')" style="cursor:pointer; background: rgba(0,0,0,0.2); margin-bottom:4px;">
+                    <div class="track-row" onclick="console.log('Reproduciendo track de album: ${track.id}')" style="cursor:pointer;">
                         <span class="track-num">${index + 1 < 10 ? '0' : ''}${index + 1}</span>
                         <div class="track-meta">
                             <span class="track-title">${track.title}</span>
@@ -331,19 +310,33 @@ async function cargarCancionesDeAlbum(albumId, albumTitle) {
             tracklistHtml = '<p class="empty-msg">// TRACKLIST_EMPTY</p>';
         }
 
-        previewBox.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--color-acento); padding-bottom:8px; margin-bottom:12px;">
-                <h4>// ALBUM_TRACKS: ${albumTitle.toUpperCase()}</h4>
-                <button onclick="document.getElementById('album-tracks-preview').classList.add('hidden')" class="btn-cyber-outline" style="padding:4px 10px; font-size:0.7rem;">Cerrar panel</button>
+        contenedorAlbum.innerHTML = `
+            <!-- CARD HORIZONTAL DEL ÁLBUM -->
+            <div class="album-horizontal-card">
+                <div class="album-horizontal-img">
+                    <img src="${albumMeta.cover_big || 'https://via.placeholder.com/500'}" alt="${albumMeta.title}">
+                </div>
+                <div class="album-horizontal-info">
+                    <h1 class="album-horizontal-title">${albumMeta.title}</h1>
+                    <div class="album-meta-grid">
+                        <div class="album-meta-item"><strong>AÑO:</strong> ${anioSalida}</div>
+                        <div class="album-meta-item"><strong>TRACKS:</strong> ${numCanciones}</div>
+                    </div>
+                </div>
             </div>
-            <div class="tracks-list-container">
-                ${tracklistHtml}
+
+            <!-- COMPONENTE TRACKLIST -->
+            <div class="top-tracks-section">
+                <h3 class="section-cyber-title">// TRACKLIST_DEL_ALBUM</h3>
+                <div class="tracks-list-container">
+                    ${tracklistHtml}
+                </div>
             </div>
         `;
 
     } catch (error) {
-        console.error("Error trayendo canciones del álbum seguro:", error);
-        previewBox.innerHTML = `<p class="error-msg">// ACCESS_ERROR_TRACKLIST</p>`;
+        console.error("Error cargando detalle del álbum:", error);
+        contenedorAlbum.innerHTML = `<p class="error-msg">CRITICAL_ERROR: UNABLE_TO_COMPILE_ALBUM_DATA</p>`;
     }
 }
 
