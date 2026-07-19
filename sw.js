@@ -16,10 +16,8 @@ const APP_SHELL = [
     './JS/player.js',
     './JS/storage.js',
     
-    // CACHÉ DE TIPOGRAFÍAS (Google Fonts externas)
-    // El SW interceptará estas URLs y guardará los archivos de fuentes en local
-    'https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Space+Grotesk:wght@400;700&display=swap',
-    'https://fonts.gstatic.com'
+   // Solo dejamos la URL de importación de estilos (esta no da error de CORS)
+    'https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Space+Grotesk:wght@400;700&display=swap'
 ];
 
 // Función auxiliar para limitar el tamaño del caché dinámico
