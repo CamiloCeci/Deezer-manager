@@ -111,15 +111,16 @@ body {
 #landing-hero {
     position: relative;
     width: 100%;
-    height: 100vh;
+    /* 1. CAMBIO RESPONSIVO: min-height evita que el contenido se desborde o se corte en pantallas pequeñas */
+    min-height: 100vh; 
     display: flex;
     justify-content: center;
     align-items: center;
     text-align: center;
-    /* Efecto misterioso: un degradado radial oscuro que simula un misterioso haz de luz morada */
+    /* Mantenemos tu hermoso efecto misterioso con la imagen de Unsplash de fondo */
     background: radial-gradient(circle, rgba(148,6,184,0.15) 0%, var(--bg-principal) 80%), 
                 url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1974&auto=format&fit=crop') no-repeat center center/cover;
-    padding: 20px;
+    padding: 30px 20px; /* Un poco más de aire arriba y abajo para móviles */
 }
 
 /* Capa oscura superpuesta para asegurar legibilidad y ambiente oscuro */
@@ -136,51 +137,71 @@ body {
 .hero-content {
     position: relative;
     z-index: 2; /* Por encima de la capa oscura */
-    max-width: 700px;
+    width: 100%;
+    max-width: 800px; /* Le damos un poco más de margen de maniobra en pantallas grandes */
 }
 
 .hero-title {
-    font-family: 'Syne', sans-serif; /* Fuente alocada/artística */
-    font-size: 4.5rem; /* Más grande e imponente */
+    font-family: 'Syne', sans-serif; /* Mantenemos tu fuente artística */
+    /* 2. CAMBIO RESPONSIVO: El tamaño fluye dinámicamente entre 2.3rem en móvil y 4.5rem en escritorio */
+    font-size: clamp(2.3rem, 6vw, 4.5rem); 
     font-weight: 800;
-    text-transform: uppercase; /* Todo en mayúsculas para más fuerza */
+    text-transform: uppercase; 
     line-height: 1.05;
     color: #FFFFFF;
     margin-bottom: 25px;
-    letter-spacing: -2px; /* Letras super pegadas para esa vibra extraña */
-    transform: skewX(-5px); /* Inclina sutilmente el texto para darle un look disruptivo */
+    letter-spacing: -2px; /* Vibra extraña intacta */
+    transform: skewX(-5px); /* Inclinación disruptiva intacta */
 }
 
 .hero-title span {
     color: var(--color-acento);
-    text-shadow: 0 0 15px rgba(148, 6, 184, 0.8), 0 0 30px rgba(148, 6, 184, 0.4); /* Brillo neón más denso */
+    text-shadow: 0 0 15px rgba(148, 6, 184, 0.8), 0 0 30px rgba(148, 6, 184, 0.4); /* Brillo neón denso */
     display: inline-block;
-    animation: pulse-glitch 3s infinite alternate; /* Efecto vivo extraño */
+    animation: pulse-glitch 3s infinite alternate; /* Tu animación viva intacta */
 }
 
 .hero-subtitle {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 1.1rem;
+    /* 3. CAMBIO RESPONSIVO: Se encoge sutilmente a 1rem en pantallas muy chicas */
+    font-size: clamp(1rem, 2vw, 1.1rem); 
     color: var(--color-acento);
-    margin-bottom: 45px;
+    margin-bottom: clamp(30px, 5vw, 45px); /* Margen inferior adaptable */
     font-weight: 400;
     letter-spacing: 1px;
+    padding: 0 10px; /* Evita que el párrafo toque los bordes del teléfono */
 }
 
 .btn-primary {
-    font-family: 'Orbitron', sans-serif; /* Fuente estilo marcador digital/cyberpunk para botones */
+    font-family: 'Orbitron', sans-serif; /* Marcador digital */
     text-transform: uppercase;
     letter-spacing: 2px;
     background-color: var(--color-acento);
     color: #FFFFFF;
     border: none;
-    padding: 16px 45px;
-    font-size: 1rem;
+    /* 4. CAMBIO RESPONSIVO: El espaciado interno del botón se adapta al tamaño del dedo en móviles */
+    padding: clamp(14px, 2vw, 16px) clamp(35px, 5vw, 45px);
+    font-size: clamp(0.9rem, 1.5vw, 1rem);
     font-weight: 700;
-    border-radius: 4px; /* Bordes cuadrados o ligeramente redondeados se ven más underground que un óvalo perfectito */
+    border-radius: 4px; /* Bordes underground cuadrados */
     cursor: pointer;
     box-shadow: 0 0 15px rgba(148, 6, 184, 0.5);
     transition: var(--transicion-suave);
+}
+
+/* ======================================================================
+   MEDIA QUERIES - DETALLES GEOMÉTRICOS PARA PANTALLAS PEQUEÑAS
+   ===================================================================== */
+@media (max-width: 480px) {
+    .hero-title {
+        letter-spacing: -1px; /* En móvil se separa un milímetro para que no se pisen las letras chicas */
+        transform: skewX(-3px); /* Reducimos la inclinación un pelo para mejorar la lectura en pantallas mini */
+    }
+
+    /* Ocultamos el salto de línea manual (<br>) en teléfonos para que el título aproveche el ancho disponible */
+    .hero-title br {
+        display: none; 
+    }
 }
 
 /* ======================================================================
