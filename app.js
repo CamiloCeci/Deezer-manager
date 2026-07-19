@@ -230,6 +230,15 @@ function inicializarEventosGlobales() {
             });
         });
     }
+
+    // Al final de tu app.js
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('SYSTEM_SW: Cache-Offline activo en el sector: ', reg.scope))
+                .catch(err => console.error('SYSTEM_SW_ERROR: Enlace offline fallido: ', err));
+        });
+    }
 }
 // ======================================================================
 // 3. FUNCIONES DE INTERCAMBIO DE VISTAS (SPA Lógica)
