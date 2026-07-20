@@ -1,361 +1,418 @@
-/* ================================================================
-   MÓDULO: JS/storage.js
-   Gestión de persistencia, biblioteca de favoritos, rating y
-   filtrado/ordenación. Vanilla JS puro, sin frameworks.
-   ================================================================ */
+// ======================================================================
+// JS/storage.js - MÓDULO DE BIBLIOTECA / PERSISTENCIA (Programador 1)
+// ----------------------------------------------------------------------
+// Responsable de:
+//   - Inyectar el botón "Guardar" en las tarjetas del buscador (Dev 2).
+//   - Persistir favoritos en localStorage segmentados por usuario.
+//   - Sistema de estrellas reactivo (rating 1..5).
+//   - Filtrado por rating y ordenamiento (incluida Pila LIFO por timestamp).
+//   - Renderizado del grid y control del Empty State.
+//
+// NOTA: No altera el layout ni el CSS. Se apoya en los ids/clases ya
+// definidos en index.html:
+//   #biblioteca-grid, #biblioteca-empty, #filtro-estrellas, #orden-biblioteca
+// ======================================================================
 
-/* ---------- Clave raíz en localStorage ---------- */
-const STORAGE_KEY = 'deezerManager_biblioteca';
+import { mostrarCyberPopup } from './popup.js';
 
-/* ================================================================
-   1) UTILIDADES DE SESIÓN Y USUARIO
-   Se asume que existe un módulo de autenticación que expone el
-   usuario activo. Si no, se usa 'invitado' como fallback seguro.
-   ================================================================ */
-function obtenerUsuarioActual() {
-    // Se busca primero en sessionStorage (login vigente),
-    // luego en localStorage; si no hay, se retorna 'invitado'.
-    return sessionStorage.getItem('usuario_actual')
-        || localStorage.getItem('usuario_actual')
-        || 'invitado';
+// ---------- Constantes internas ---------------------------------------
+const STORAGE_KEY = 'biblioteca_deezer'; // objeto raíz { usuario: [albums] }
+
+// Estado de UI (filtro/orden activos) — módulo-privado
+const estadoUI = {
+    filtroRating: 'todos',   // 'todos' | '1'..'5'
+    orden: 'recientes'       // 'recientes' | 'antiguos' | 'az' | 'za'
+};
+
+
+// ======================================================================
+// 0. UTILIDADES DE SESIÓN Y LECTURA DEL STORAGE
+// ======================================================================
+
+/**
+ * Obtiene el usuario logueado actualmente (definido por auth.js).
+ * Si no hay sesión activa devuelve null; las funciones de escritura
+ * abortan en ese caso para no contaminar el storage.
+ */
+function obtenerUsuarioActivo() {
+    return localStorage.getItem('usuario_activo');
 }
 
-/* ================================================================
-   2) LECTURA / ESCRITURA DEL OBJETO GLOBAL EN localStorage
-   Estructura persistida:
-   {
-     "usuario1": [ { id, titulo, artista, cover_url, rating, timestamp } ],
-     "usuario2": [ ... ]
-   }
-   ================================================================ */
-function _leerStorage() {
-    // Se intenta parsear; si falla o no existe, se retorna objeto vacío
+/**
+ * Devuelve el objeto raíz de la biblioteca desde localStorage.
+ * Estructura garantizada: { "usuario": [ {album}, ... ] }
+ */
+function leerRaiz() {
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : {};
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
     } catch (e) {
-        console.error('Storage corrupto, reinicializando:', e);
+        console.warn('[storage] JSON corrupto, se reinicia.', e);
         return {};
     }
 }
 
-function _escribirStorage(dataCompleta) {
-    // Persistencia atómica del objeto completo
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataCompleta));
+/**
+ * Escribe el objeto raíz completo en localStorage.
+ */
+function escribirRaiz(raiz) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(raiz));
 }
 
-/* ================================================================
-   3) API PÚBLICA DE PERSISTENCIA SEGMENTADA POR USUARIO
-   ================================================================ */
+
+// ======================================================================
+// 1. PUENTE PARA EL DEV 2 - INYECCIÓN DEL BOTÓN "AÑADIR A LA BIBLIOTECA"
+// ======================================================================
 
 /**
- * Retorna el array de favoritos del usuario activo.
+ * Inyecta un botón de guardado dentro de una tarjeta generada por el
+ * buscador de la API (Dev 2). No modifica el resto de la tarjeta.
+ *
+ * @param {HTMLElement} cardElement - Nodo DOM de la tarjeta del buscador.
+ * @param {{id:(string|number), titulo:string, artista:string,
+ *          cover_url:string, tracks?:Array}} infoAlbum - Datos del álbum.
  */
-function obtenerFavoritos() {
-    const data = _leerStorage();
-    const user = obtenerUsuarioActual();
-    return data[user] || [];
+export function inyectarBotonGuardar(cardElement, infoAlbum) {
+    if (!cardElement || !infoAlbum || !infoAlbum.id) return;
+
+    // Evita duplicar el botón si la tarjeta se re-renderiza.
+    if (cardElement.querySelector('.btn-guardar-biblioteca')) return;
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn-guardar-biblioteca';
+    btn.setAttribute('aria-label', `Guardar ${infoAlbum.titulo} en mi biblioteca`);
+    btn.title = 'Guardar en mi biblioteca';
+    btn.dataset.albumId = String(infoAlbum.id);
+
+    // SVG limpio tipo "disquete" (guardado). Hereda color con currentColor.
+    btn.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+             width="20" height="20" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+    `;
+
+    // Delegación directa: al hacer clic, se guarda el álbum recibido.
+    btn.addEventListener('click', (ev) => {
+        ev.stopPropagation();      // evita disparar handlers de la tarjeta
+        ev.preventDefault();
+        guardarEnBiblioteca(infoAlbum);
+    });
+
+    cardElement.appendChild(btn);
 }
+// Exposición global para que Dev 2 pueda invocarla sin importar el módulo.
+window.inyectarBotonGuardar = inyectarBotonGuardar;
+
+
+// ======================================================================
+// 2. PERSISTENCIA SEGMENTADA POR USUARIO
+// ======================================================================
 
 /**
- * Guarda (o actualiza) un álbum en el array del usuario activo.
- * Emula un Stack: los añadidos recientes van al final con timestamp.
+ * Guarda un álbum en la biblioteca del usuario activo.
+ * Añade automáticamente rating=0 y timestamp=Date.now().
+ * Si el álbum ya existe (mismo id), no lo duplica.
+ *
+ * @param {Object} album - { id, titulo, artista, cover_url, tracks? }
  */
-function guardarFavorito(album) {
-    if (!album || !album.id) {
-        console.warn('Álbum inválido, no se guarda.');
+export function guardarEnBiblioteca(album) {
+    const usuario = obtenerUsuarioActivo();
+    if (!usuario) {
+        mostrarCyberPopup('ACCESO_REQUERIDO: Inicia sesión para guardar álbumes.');
+        return;
+    }
+    if (!album || album.id == null) return;
+
+    const raiz = leerRaiz();
+    const lista = raiz[usuario] || [];
+
+    // Prevención de duplicados por id
+    if (lista.some(a => String(a.id) === String(album.id))) {
+        mostrarCyberPopup(`"${album.titulo}" ya estaba en tu biblioteca.`);
         return;
     }
 
-    const data = _leerStorage();
-    const user = obtenerUsuarioActual();
-    const lista = data[user] || [];
-
-    // Evitar duplicados: si ya existe, no re-insertar
-    if (lista.some(a => String(a.id) === String(album.id))) return;
-
-    // Se construye el objeto normalizado que se persistirá
-    const nuevo = {
-        id:         album.id,
-        titulo:     album.titulo    || album.title || 'Sin título',
-        artista:    album.artista   || album.artist || 'Desconocido',
-        cover_url:  album.cover_url || album.cover  || '',
-        rating:     album.rating    || 0,
-        timestamp:  Date.now()  // Marca temporal para orden LIFO / stack
+    // Registro normalizado que se persiste
+    const registro = {
+        id: album.id,
+        titulo: album.titulo,
+        artista: album.artista,
+        cover_url: album.cover_url,
+        tracks: Array.isArray(album.tracks) ? album.tracks : [],
+        rating: 0,
+        timestamp: Date.now()   // clave para el orden LIFO (Stack)
     };
 
-    lista.push(nuevo);          // push => tope de la pila (más reciente)
-    data[user] = lista;
-    _escribirStorage(data);
+    lista.push(registro);
+    raiz[usuario] = lista;
+    escribirRaiz(raiz);
+
+    mostrarCyberPopup(`ALBUM_GUARDADO: "${album.titulo}"`);
+    actualizarVistaBiblioteca();
 }
 
 /**
- * Elimina un álbum de la biblioteca del usuario activo.
+ * Elimina un álbum de la biblioteca del usuario activo por su id.
+ * @param {string|number} albumId
  */
-function eliminarFavorito(albumId) {
-    const data = _leerStorage();
-    const user = obtenerUsuarioActual();
-    const lista = data[user] || [];
+export function eliminarDeBiblioteca(albumId) {
+    const usuario = obtenerUsuarioActivo();
+    if (!usuario) return;
 
-    data[user] = lista.filter(a => String(a.id) !== String(albumId));
-    _escribirStorage(data);
+    const raiz = leerRaiz();
+    const lista = raiz[usuario] || [];
+    raiz[usuario] = lista.filter(a => String(a.id) !== String(albumId));
+    escribirRaiz(raiz);
+
+    actualizarVistaBiblioteca();
 }
 
 /**
- * Actualiza el rating de un álbum específico (reactivo).
+ * Devuelve el array bruto de álbumes guardados del usuario activo.
+ * Nunca aplica filtros/orden; para eso está `obtenerVistaActual()`.
+ * @returns {Array}
  */
-function actualizarRating(albumId, nuevoRating) {
-    const data = _leerStorage();
-    const user = obtenerUsuarioActual();
-    const lista = data[user] || [];
+export function obtenerAlbumesGuardados() {
+    const usuario = obtenerUsuarioActivo();
+    if (!usuario) return [];
+    const raiz = leerRaiz();
+    return raiz[usuario] || [];
+}
 
+
+// ======================================================================
+// 3. LÓGICA DE FILTRO Y ORDENAMIENTO
+// ======================================================================
+
+/**
+ * Aplica el filtro de rating y el ordenamiento activo sobre la lista
+ * cruda del usuario. Devuelve un NUEVO array (no muta el original).
+ */
+function obtenerVistaActual() {
+    let vista = obtenerAlbumesGuardados().slice(); // copia defensiva
+
+    // --- Filtrado por número de estrellas ---
+    if (estadoUI.filtroRating !== 'todos') {
+        const objetivo = parseInt(estadoUI.filtroRating, 10);
+        vista = vista.filter(a => Number(a.rating) === objetivo);
+    }
+
+    // --- Ordenamiento ---
+    switch (estadoUI.orden) {
+        case 'az':
+            // Alfabético A-Z por título; fallback al artista si empatan.
+            vista.sort((a, b) =>
+                a.titulo.localeCompare(b.titulo) ||
+                a.artista.localeCompare(b.artista)
+            );
+            break;
+        case 'za':
+            vista.sort((a, b) => b.titulo.localeCompare(a.titulo));
+            break;
+        case 'antiguos':
+            vista.sort((a, b) => a.timestamp - b.timestamp); // FIFO
+            break;
+        case 'recientes':
+        default:
+            // ESTRUCTURA DE PILA (LIFO): el último añadido queda arriba.
+            // Se emula ordenando descendentemente por timestamp.
+            vista.sort((a, b) => b.timestamp - a.timestamp);
+            break;
+    }
+
+    return vista;
+}
+
+
+// ======================================================================
+// 4. SISTEMA DE ESTRELLAS REACTIVO
+// ======================================================================
+
+/**
+ * Actualiza la calificación de un álbum del usuario activo.
+ * Persiste el cambio y re-renderiza el grid para reflejar el filtro.
+ *
+ * @param {string|number} albumId
+ * @param {number} nuevoRating - Valor entre 1 y 5.
+ */
+export function actualizarRating(albumId, nuevoRating) {
+    const usuario = obtenerUsuarioActivo();
+    if (!usuario) return;
+    if (nuevoRating < 1 || nuevoRating > 5) return;
+
+    const raiz = leerRaiz();
+    const lista = raiz[usuario] || [];
     const idx = lista.findIndex(a => String(a.id) === String(albumId));
     if (idx === -1) return;
 
     lista[idx].rating = nuevoRating;
-    data[user] = lista;
-    _escribirStorage(data);
+    raiz[usuario] = lista;
+    escribirRaiz(raiz);
+
+    actualizarVistaBiblioteca();
 }
 
-/* ================================================================
-   4) GENERADORES DE SVG (iconografía limpia estilo SVG Repo)
-   ================================================================ */
-
-/** SVG de disquete (guardar) */
-function _svgGuardar() {
-    return `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-         stroke="currentColor" stroke-width="2" stroke-linecap="round"
-         stroke-linejoin="round" aria-hidden="true">
-      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-      <polyline points="17 21 17 13 7 13 7 21"/>
-      <polyline points="7 3 7 8 15 8"/>
-    </svg>`;
-}
-
-/** SVG de papelera (eliminar) */
-function _svgEliminar() {
-    return `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-         stroke="currentColor" stroke-width="2" stroke-linecap="round"
-         stroke-linejoin="round" aria-hidden="true">
-      <polyline points="3 6 5 6 21 6"/>
-      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-      <path d="M10 11v6"/><path d="M14 11v6"/>
-      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-    </svg>`;
-}
-
-/** SVG de estrella (rating) */
-function _svgEstrella() {
-    return `
-    <svg class="star-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-         fill="currentColor" aria-hidden="true">
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77
-                       5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-    </svg>`;
-}
-
-/* ================================================================
-   5) FACTORY: BOTÓN DE GUARDAR (para tarjetas del Buscador API)
-   Uso por el Dev 2:
-     const btn = crearBotonGuardar(albumObj);
-     tarjeta.appendChild(btn);
-   ================================================================ */
-function crearBotonGuardar(album) {
-    const btn = document.createElement('button');
-    btn.className = 'btn-guardar';
-    btn.type = 'button';
-    btn.setAttribute('aria-label', 'Guardar en biblioteca');
-    btn.innerHTML = `${_svgGuardar()}<span>Guardar</span>`;
-
-    // Si el álbum ya está guardado, reflejarlo visualmente al render
-    const yaGuardado = obtenerFavoritos()
-        .some(a => String(a.id) === String(album.id));
-    if (yaGuardado) {
-        btn.classList.add('guardado');
-        btn.querySelector('span').textContent = 'Guardado';
+/**
+ * Construye el bloque HTML de 5 estrellas para una tarjeta.
+ * Cada estrella conoce su valor mediante data-valor.
+ */
+function construirEstrellasHTML(rating) {
+    let html = '<div class="rating-stars" role="radiogroup" aria-label="Calificación">';
+    for (let i = 1; i <= 5; i++) {
+        const activa = i <= rating ? 'estrella-activa' : 'estrella-vacia';
+        html += `
+            <button type="button"
+                    class="estrella ${activa}"
+                    data-valor="${i}"
+                    role="radio"
+                    aria-checked="${i === rating}"
+                    aria-label="${i} estrella${i > 1 ? 's' : ''}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                     width="18" height="18"
+                     fill="${i <= rating ? 'currentColor' : 'none'}"
+                     stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round"
+                     aria-hidden="true">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+            </button>
+        `;
     }
+    html += '</div>';
+    return html;
+}
 
-    // Handler de clic: guarda y actualiza UI reactivamente
-    btn.addEventListener('click', () => {
-        guardarFavorito(album);
-        btn.classList.add('guardado');
-        btn.querySelector('span').textContent = 'Guardado';
-        // Notifica al resto de la SPA para re-renderizar la biblioteca
-        document.dispatchEvent(new CustomEvent('biblioteca:actualizada'));
+
+// ======================================================================
+// 5. RENDERIZADO DEL GRID Y EMPTY STATE
+// ======================================================================
+
+/**
+ * Genera el nodo DOM de una tarjeta de la biblioteca (no del buscador).
+ */
+function construirTarjetaBiblioteca(album) {
+    const card = document.createElement('article');
+    card.className = 'album-card biblioteca-card';
+    card.dataset.albumId = String(album.id);
+
+    card.innerHTML = `
+        <div class="album-card-cover">
+            <img src="${album.cover_url}" alt="Portada de ${album.titulo}" loading="lazy">
+        </div>
+        <div class="album-card-info">
+            <h3 class="album-card-title">${album.titulo}</h3>
+            <p class="album-card-artist">${album.artista}</p>
+            ${construirEstrellasHTML(Number(album.rating) || 0)}
+            <button type="button" class="btn-eliminar-biblioteca"
+                    aria-label="Eliminar de la biblioteca">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                     width="18" height="18" fill="none" stroke="currentColor"
+                     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                     aria-hidden="true">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                    <path d="M10 11v6M14 11v6"></path>
+                    <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                Eliminar
+            </button>
+        </div>
+    `;
+
+    // --- Handlers propios de la tarjeta ---
+
+    // Clic en cualquier estrella -> actualizar rating.
+    card.querySelectorAll('.estrella').forEach(btn => {
+        btn.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            const valor = parseInt(btn.dataset.valor, 10);
+            actualizarRating(album.id, valor);
+        });
     });
 
-    return btn;
-}
-
-/* ================================================================
-   6) COMPONENTE INTERACTIVO DE ESTRELLAS
-   Inyecta 5 estrellas SVG dentro del contenedor pasado, con el
-   rating actual resaltado y click handlers reactivos.
-   ================================================================ */
-function inyectarEstrellas(contenedor, albumId, ratingActual) {
-    contenedor.innerHTML = ''; // Limpia previamente
-    contenedor.classList.add('rating-stars');
-    contenedor.setAttribute('role', 'radiogroup');
-    contenedor.setAttribute('aria-label', 'Calificación del álbum');
-
-    for (let i = 1; i <= 5; i++) {
-        // Envolvemos el SVG en un span para asociar dataset y eventos
-        const wrapper = document.createElement('span');
-        wrapper.innerHTML = _svgEstrella();
-        const star = wrapper.firstElementChild;
-        star.dataset.value = i;
-        star.setAttribute('role', 'radio');
-        star.setAttribute('aria-checked', i === ratingActual);
-        if (i <= ratingActual) star.classList.add('active');
-
-        // Click: actualiza rating persistente y re-renderiza el grid
-        star.addEventListener('click', (e) => {
-            e.stopPropagation();
-            actualizarRating(albumId, i);
-            renderizarBiblioteca(); // Re-render reactivo
+    // Botón eliminar.
+    card.querySelector('.btn-eliminar-biblioteca')
+        .addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            eliminarDeBiblioteca(album.id);
         });
 
-        contenedor.appendChild(star);
-    }
-}
-
-/* ================================================================
-   7) RENDER DE UNA TARJETA DE ÁLBUM EN LA BIBLIOTECA
-   ================================================================ */
-function _crearTarjetaBiblioteca(album) {
-    const card = document.createElement('article');
-    card.className = 'album-card';
-    card.dataset.id = album.id;
-
-    // Botón eliminar (esquina superior derecha)
-    const btnDel = document.createElement('button');
-    btnDel.className = 'icon-btn album-card__delete';
-    btnDel.type = 'button';
-    btnDel.setAttribute('aria-label', 'Eliminar de la biblioteca');
-    btnDel.innerHTML = _svgEliminar();
-    btnDel.addEventListener('click', () => {
-        eliminarFavorito(album.id);
-        renderizarBiblioteca();
-    });
-
-    // Portada
-    const img = document.createElement('img');
-    img.className = 'album-card__cover';
-    img.src = album.cover_url || '';
-    img.alt = `Portada de ${album.titulo}`;
-    img.loading = 'lazy';
-
-    // Cuerpo con título, artista y estrellas
-    const body = document.createElement('div');
-    body.className = 'album-card__body';
-
-    const h3 = document.createElement('h3');
-    h3.className = 'album-card__title';
-    h3.textContent = album.titulo;
-
-    const artist = document.createElement('p');
-    artist.className = 'album-card__artist';
-    artist.textContent = album.artista;
-
-    const starsContainer = document.createElement('div');
-    inyectarEstrellas(starsContainer, album.id, album.rating || 0);
-
-    body.append(h3, artist, starsContainer);
-    card.append(btnDel, img, body);
     return card;
 }
 
-/* ================================================================
-   8) FILTRADO Y ORDENACIÓN + RENDER PRINCIPAL
-   ================================================================ */
-function renderizarBiblioteca() {
-    const grid  = document.getElementById('biblioteca-grid');
+/**
+ * Función central: lee la vista (filtro + orden aplicados), limpia el
+ * grid y lo repuebla. Alterna la visibilidad del Empty State.
+ */
+export function actualizarVistaBiblioteca() {
+    const grid = document.getElementById('biblioteca-grid');
     const empty = document.getElementById('biblioteca-empty');
     if (!grid || !empty) return;
 
-    // 1. Obtener favoritos del usuario activo
-    let lista = obtenerFavoritos();
+    const vista = obtenerVistaActual();
 
-    // 2. Aplicar filtro de estrellas
-    const filtroEl = document.getElementById('filtro-estrellas');
-    const filtro   = filtroEl ? filtroEl.value : 'todos';
-    if (filtro !== 'todos') {
-        const n = parseInt(filtro, 10);
-        lista = lista.filter(a => (a.rating || 0) === n);
-    }
-
-    // 3. Aplicar ordenación
-    const ordenEl = document.getElementById('orden-biblioteca');
-    const orden   = ordenEl ? ordenEl.value : 'recientes';
-    switch (orden) {
-        case 'recientes':
-            // Stack LIFO: más recientes primero (timestamp descendente)
-            lista.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-            break;
-        case 'antiguos':
-            lista.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-            break;
-        case 'az':
-            lista.sort((a, b) => a.titulo.localeCompare(b.titulo));
-            break;
-        case 'za':
-            lista.sort((a, b) => b.titulo.localeCompare(a.titulo));
-            break;
-    }
-
-    // 4. Empty state vs render normal
+    // Limpieza total del contenedor antes de re-inyectar.
     grid.innerHTML = '';
-    if (lista.length === 0) {
+
+    if (vista.length === 0) {
         empty.classList.remove('hidden');
         grid.classList.add('hidden');
         return;
     }
+
     empty.classList.add('hidden');
     grid.classList.remove('hidden');
 
-    // 5. Inyectar tarjetas en el DOM
-    const fragment = document.createDocumentFragment();
-    lista.forEach(album => fragment.appendChild(_crearTarjetaBiblioteca(album)));
-    grid.appendChild(fragment);
+    // DocumentFragment: minimiza reflows al insertar N tarjetas.
+    const frag = document.createDocumentFragment();
+    vista.forEach(album => frag.appendChild(construirTarjetaBiblioteca(album)));
+    grid.appendChild(frag);
 }
 
-/* ================================================================
-   9) INICIALIZACIÓN DE LISTENERS
-   Se ejecuta cuando el DOM está listo. Enlaza los selectores del
-   Bloque 1 con la función de render.
-   ================================================================ */
-function inicializarBiblioteca() {
-    const filtro = document.getElementById('filtro-estrellas');
-    const orden  = document.getElementById('orden-biblioteca');
 
-    if (filtro) filtro.addEventListener('change', renderizarBiblioteca);
-    if (orden)  orden.addEventListener('change',  renderizarBiblioteca);
+// ======================================================================
+// 6. INICIALIZACIÓN DE LISTENERS (selectores de filtro y orden)
+// ======================================================================
 
-    // Re-render cuando otro módulo notifique cambios (ej: guardar desde buscador)
-    document.addEventListener('biblioteca:actualizada', renderizarBiblioteca);
+/**
+ * Enlaza los <select> existentes en el HTML con el estado interno y
+ * pinta la biblioteca por primera vez. Debe llamarse una sola vez
+ * desde app.js tras cargar el DOM (o tras iniciar sesión).
+ */
+export function inicializarBiblioteca() {
+    const selFiltro = document.getElementById('filtro-estrellas');
+    const selOrden  = document.getElementById('orden-biblioteca');
 
-    // Render inicial
-    renderizarBiblioteca();
+    if (selFiltro) {
+        estadoUI.filtroRating = selFiltro.value || 'todos';
+        selFiltro.addEventListener('change', (ev) => {
+            estadoUI.filtroRating = ev.target.value;
+            actualizarVistaBiblioteca();
+        });
+    }
+
+    if (selOrden) {
+        estadoUI.orden = selOrden.value || 'recientes';
+        selOrden.addEventListener('change', (ev) => {
+            estadoUI.orden = ev.target.value;
+            actualizarVistaBiblioteca();
+        });
+    }
+
+    // Primer pintado.
+    actualizarVistaBiblioteca();
 }
 
-// Auto-arranque cuando el DOM esté listo
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', inicializarBiblioteca);
-} else {
-    inicializarBiblioteca();
-}
 
-/* ================================================================
-   10) EXPOSICIÓN GLOBAL (para consumo desde otros módulos JS)
-   ================================================================ */
-window.DeezerStorage = {
-    obtenerFavoritos,
-    guardarFavorito,
-    eliminarFavorito,
-    actualizarRating,
-    crearBotonGuardar,
-    renderizarBiblioteca,
-    obtenerUsuarioActual
-};
+// ======================================================================
+// 7. EXPOSICIÓN GLOBAL (para Dev 2 y para debugging desde consola)
+// ======================================================================
+window.guardarEnBiblioteca     = guardarEnBiblioteca;
+window.eliminarDeBiblioteca    = eliminarDeBiblioteca;
+window.obtenerAlbumesGuardados = obtenerAlbumesGuardados;
+window.actualizarVistaBiblioteca = actualizarVistaBiblioteca;
