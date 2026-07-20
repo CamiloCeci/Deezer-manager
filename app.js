@@ -6,6 +6,10 @@
 import { inicializarReproductor } from './JS/player.js';
 import { renderBuscador } from './JS/music.js';
 import { iniciarSesion, registrarUsuario, comprobarEstadoSesion } from './JS/auth.js';
+import { inicializarBiblioteca } from './JS/storage.js';
+
+
+
 
 
 // Variable global para controlar el intervalo de Matrix
@@ -286,11 +290,11 @@ function cargarVistaBiblioteca() {
     
     contenedor.innerHTML = ''; // Borra la pantalla anterior
     contenedor.appendChild(plantilla.content.cloneNode(true)); // Inserta los favoritos
-
-    // [PROGRAMADOR 3]: Aquí llamarás a la función de tu archivo storage.js
-    // para pintar las tarjetas guardadas en LocalStorage y activar tus filtros por estrellas[cite: 2, 3].
-    // renderBiblioteca();
+// Engancha pestañas (Canciones/Álbumes), filtros (rating), orden (Stack/AZ)
+    // y pinta las tarjetas guardadas en LocalStorage.
+    inicializarBiblioteca();
 }
+
 
 //Funcion de diseño
 
@@ -368,11 +372,3 @@ function detenerEfectoMatrix() {
         ctx.clearRect(0, 0, canvas.width, canvas.height); // Borra el último fotograma
     }
 }
-import { inicializarBiblioteca } from './JS/storage.js';
-
-btnNavLibrary.addEventListener('click', () => {
-    const tpl = document.getElementById('temp-biblioteca');
-    main.innerHTML = '';
-    main.appendChild(tpl.content.cloneNode(true));
-    inicializarBiblioteca();  // engancha pestañas, filtros y pinta
-});

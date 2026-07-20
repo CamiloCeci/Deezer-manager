@@ -3,7 +3,11 @@
 // ======================================================================
 import { setTracklistYReproducir } from './player.js';
 import { mostrarCyberPopup } from './popup.js';
-
+import {
+    inyectarBotonGuardarCancion,
+    inyectarBotonGuardarAlbum,
+    guardarAlbumEnBiblioteca
+} from './storage.js';
 const BASE_API_URL = 'https://api.deezer.com';
 
 // Variables de estado interno para paginar álbumes dinámicamente
@@ -238,6 +242,22 @@ async function cargarPerfilArtista(artistId) {
 
         document.getElementById('btn-load-more-albums').addEventListener('click', fetchSiguienteBloqueAlbumes);
         await fetchSiguienteBloqueAlbumes();
+        // Botones de guardar en cada fila de sencillos icónicos
+        const filas = contenedorProfile.querySelectorAll('.tracks-list-container .track-row');
+        filas.forEach((fila, i) => {
+            const t = tracksData.data[i];
+            if (!t) return;
+            inyectarBotonGuardarCancion(fila, {
+                id: t.id,
+                titulo: t.title,
+                artista: artistData.name,
+                cover_url: (t.album && t.album.cover_medium) || artistData.picture_medium || '',
+                preview_url: t.preview || '',
+                duracion: t.duration || 0,
+                album_id: t.album ? t.album.id : null,
+                album_titulo: t.album ? t.album.title : ''
+            });
+        });
 
     } catch (error) {
         console.error("Error estructurando perfil seguro:", error);
@@ -271,6 +291,14 @@ async function fetchSiguienteBloqueAlbumes() {
                 });
 
                 contenedorAlbums.appendChild(item);
+                // Botón guardar álbum en la tarjeta del catálogo del artista
+                inyectarBotonGuardarAlbum(item, {
+                    id: album.id,
+                    titulo: album.title,
+                    artista: (album.artist && album.artist.name) || '',
+                    cover_url: album.cover_medium || album.cover_big || '',
+                    tracks: []
+                });
             });
 
             currentAlbumIndex += data.data.length;
@@ -344,9 +372,12 @@ async function cargarVistaDetalleAlbum(albumId) {
                         <div class="album-meta-item"><strong>AÑO:</strong> ${anioSalida}</div>
                         <div class="album-meta-item"><strong>TRACKS:</strong> ${numCanciones}</div>
                     </div>
+                    <button type="button" id="btn-guardar-album-full" class="btn-cyber-outline btn-guardar-album-hero">
+                        [ GUARDAR_ALBUM_COMPLETO ]
+                    </button>
                 </div>
             </div>
-
+            
             <!-- COMPONENTE TRACKLIST -->
             <div class="top-tracks-section">
                 <h3 class="section-cyber-title">// TRACKLIST_DEL_ALBUM</h3>
@@ -355,6 +386,41 @@ async function cargarVistaDetalleAlbum(albumId) {
                 </div>
             </div>
         `;
+        // Botón "guardar álbum completo" en la cabecera de la vista de detalle
+        const artistaAlbum = (albumMeta.artist && albumMeta.artist.name) || '';
+        const btnGuardarFull = document.getElementById('btn-guardar-album-full');
+        if (btnGuardarFull) {
+            btnGuardarFull.addEventListener('click', () => {
+                guardarAlbumEnBiblioteca({
+                    id: albumMeta.id,
+                    titulo: albumMeta.title,
+                    artista: artistaAlbum,
+                    cover_url: albumMeta.cover_medium || albumMeta.cover_big || '',
+                    tracks: (tracksData.data || []).map(t => ({
+                        id: t.id,
+                        titulo: t.title,
+                        preview_url: t.preview || '',
+                        duracion: t.duration || 0
+                    }))
+                });
+            });
+        }
+        // Botones de guardar por canción individual en cada fila del tracklist
+        const filasAlbum = contenedorAlbum.querySelectorAll('.tracks-list-container .track-row');
+        filasAlbum.forEach((fila, i) => {
+            const t = (tracksData.data || [])[i];
+            if (!t) return;
+            inyectarBotonGuardarCancion(fila, {
+                id: t.id,
+                titulo: t.title,
+                artista: artistaAlbum,
+                cover_url: albumMeta.cover_medium || albumMeta.cover_big || '',
+                preview_url: t.preview || '',
+                duracion: t.duration || 0,
+                album_id: albumMeta.id,
+                album_titulo: albumMeta.title
+            });
+        });
 
     } catch (error) {
         console.error("Error cargando detalle del álbum:", error);
