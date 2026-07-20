@@ -348,104 +348,104 @@
             </div>
         </section>
     </template>
-    <template id="temp-biblioteca">
-    <section id="library-view">
-        <div class="library-wrapper">
+        <template id="temp-biblioteca">
+        <section id="library-view">
+            <div class="library-wrapper">
 
-            <!-- ENCABEZADO ESTILO TERMINAL, alineado con la estética
-                 del buscador (misma tipografía / mismo prompt visual) -->
-            <div class="library-header-bar">
-                <h2 class="section-cyber-title">// MI_BIBLIOTECA</h2>
-                <p class="library-subtitle">
-                    Archivo personal del operativo: canciones y álbumes guardados en sesión.
-                </p>
-            </div>
-
-            <!-- BARRA DE CONTROLES: pestañas (Canciones / Álbumes) + filtros -->
-            <div class="library-controls" role="toolbar" aria-label="Controles de biblioteca">
-
-                <!-- Conmutador de tipo de contenido -->
-                <div class="library-tabs" role="tablist">
-                    <button type="button"
-                            id="tab-biblioteca-canciones"
-                            class="library-tab active"
-                            role="tab"
-                            aria-selected="true"
-                            data-tipo="canciones">
-                        CANCIONES
-                    </button>
-                    <button type="button"
-                            id="tab-biblioteca-albumes"
-                            class="library-tab"
-                            role="tab"
-                            aria-selected="false"
-                            data-tipo="albumes">
-                        ÁLBUMES
-                    </button>
+                <!-- ENCABEZADO ESTILO TERMINAL, alineado con la estética
+                    del buscador (misma tipografía / mismo prompt visual) -->
+                <div class="library-header-bar">
+                    <h2 class="section-cyber-title">// MI_BIBLIOTECA</h2>
+                    <p class="library-subtitle">
+                        Archivo personal del operativo: canciones y álbumes guardados en sesión.
+                    </p>
                 </div>
 
-                <!-- Filtro por estrellas -->
-                <div class="control-group">
-                    <label for="filtro-estrellas">FILTRAR_RATING:</label>
-                    <select id="filtro-estrellas" class="control-select">
-                        <option value="todos">Ver todos</option>
-                        <option value="1">1 estrella</option>
-                        <option value="2">2 estrellas</option>
-                        <option value="3">3 estrellas</option>
-                        <option value="4">4 estrellas</option>
-                        <option value="5">5 estrellas</option>
-                    </select>
-                </div>
+                <!-- BARRA DE CONTROLES: pestañas (Canciones / Álbumes) + filtros -->
+                <div class="library-controls" role="toolbar" aria-label="Controles de biblioteca">
 
-                <!-- Orden (Stack LIFO por defecto) -->
-                <div class="control-group">
-                    <label for="orden-biblioteca">ORDENAR_POR:</label>
-                    <select id="orden-biblioteca" class="control-select">
-                        <option value="recientes">Añadido reciente (Stack)</option>
-                        <option value="antiguos">Más antiguos</option>
-                        <option value="az">Alfabéticamente (A-Z)</option>
-                        <option value="za">Alfabéticamente (Z-A)</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- CONTENEDOR DINÁMICO: se muestra uno u otro grid -->
-            <div id="biblioteca-dynamic-content">
-
-                <!-- GRID DE CANCIONES -->
-                <div id="biblioteca-canciones-grid" class="album-grid" aria-live="polite">
-                    <!-- Inyectado por JS -->
-                </div>
-
-                <!-- GRID DE ÁLBUMES (oculto por defecto) -->
-                <div id="biblioteca-albumes-grid" class="album-grid hidden" aria-live="polite">
-                    <!-- Inyectado por JS -->
-                </div>
-
-                <!-- EMPTY STATE (compartido: cambia el texto según pestaña) -->
-                <div id="biblioteca-empty" class="empty-state-card hidden" role="status">
-                    <div class="empty-svg-bg">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                             fill="none" stroke="currentColor" stroke-width="1.5"
-                             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M21 8v13H3V8"></path>
-                            <path d="M1 3h22v5H1z"></path>
-                            <path d="M10 12h4"></path>
-                        </svg>
+                    <!-- Conmutador de tipo de contenido -->
+                    <div class="library-tabs" role="tablist">
+                        <button type="button"
+                                id="tab-biblioteca-canciones"
+                                class="library-tab active"
+                                role="tab"
+                                aria-selected="true"
+                                data-tipo="canciones">
+                            CANCIONES
+                        </button>
+                        <button type="button"
+                                id="tab-biblioteca-albumes"
+                                class="library-tab"
+                                role="tab"
+                                aria-selected="false"
+                                data-tipo="albumes">
+                            ÁLBUMES
+                        </button>
                     </div>
-                    <div class="empty-state-content">
-                        <h3 id="biblioteca-empty-title">TU_BIBLIOTECA_ESTÁ_VACÍA</h3>
-                        <p id="biblioteca-empty-msg">
-                            Aún no has guardado nada. Busca música y pulsa el botón de guardar
-                            para archivarlo en tu biblioteca.
-                        </p>
+
+                    <!-- Filtro por estrellas -->
+                    <div class="control-group">
+                        <label for="filtro-estrellas">FILTRAR_RATING:</label>
+                        <select id="filtro-estrellas" class="control-select">
+                            <option value="todos">Ver todos</option>
+                            <option value="1">1 estrella</option>
+                            <option value="2">2 estrellas</option>
+                            <option value="3">3 estrellas</option>
+                            <option value="4">4 estrellas</option>
+                            <option value="5">5 estrellas</option>
+                        </select>
+                    </div>
+
+                    <!-- Orden (Stack LIFO por defecto) -->
+                    <div class="control-group">
+                        <label for="orden-biblioteca">ORDENAR_POR:</label>
+                        <select id="orden-biblioteca" class="control-select">
+                            <option value="recientes">Añadido reciente (Stack)</option>
+                            <option value="antiguos">Más antiguos</option>
+                            <option value="az">Alfabéticamente (A-Z)</option>
+                            <option value="za">Alfabéticamente (Z-A)</option>
+                        </select>
                     </div>
                 </div>
 
+                <!-- CONTENEDOR DINÁMICO: se muestra uno u otro grid -->
+                <div id="biblioteca-dynamic-content">
+
+                    <!-- GRID DE CANCIONES -->
+                    <div id="biblioteca-canciones-grid" class="album-grid" aria-live="polite">
+                        <!-- Inyectado por JS -->
+                    </div>
+
+                    <!-- GRID DE ÁLBUMES (oculto por defecto) -->
+                    <div id="biblioteca-albumes-grid" class="album-grid hidden" aria-live="polite">
+                        <!-- Inyectado por JS -->
+                    </div>
+
+                    <!-- EMPTY STATE (compartido: cambia el texto según pestaña) -->
+                    <div id="biblioteca-empty" class="empty-state-card hidden" role="status">
+                        <div class="empty-svg-bg">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="1.5"
+                                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M21 8v13H3V8"></path>
+                                <path d="M1 3h22v5H1z"></path>
+                                <path d="M10 12h4"></path>
+                            </svg>
+                        </div>
+                        <div class="empty-state-content">
+                            <h3 id="biblioteca-empty-title">TU_BIBLIOTECA_ESTÁ_VACÍA</h3>
+                            <p id="biblioteca-empty-msg">
+                                Aún no has guardado nada. Busca música y pulsa el botón de guardar
+                                para archivarlo en tu biblioteca.
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
             </div>
-        </div>
-    </section>
-</template>
+        </section>
+    </template>
 
 
 
