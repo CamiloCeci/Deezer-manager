@@ -368,3 +368,11 @@ function detenerEfectoMatrix() {
         ctx.clearRect(0, 0, canvas.width, canvas.height); // Borra el último fotograma
     }
 }
+import { inicializarBiblioteca } from './JS/storage.js';
+
+btnNavLibrary.addEventListener('click', () => {
+    const tpl = document.getElementById('temp-biblioteca');
+    main.innerHTML = '';
+    main.appendChild(tpl.content.cloneNode(true));
+    inicializarBiblioteca();  // engancha pestañas, filtros y pinta
+});
