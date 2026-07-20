@@ -1,47 +1,45 @@
 // ======================================================================
-// JS/storage.js - MÓDULO DE BIBLIOTECA / PERSISTENCIA (Programador 1)
+// JS/storage.js - MÓDULO DE BIBLIOTECA / PERSISTENCIA (Programador 1) - v2
 // ----------------------------------------------------------------------
-// Responsable de:
-//   - Inyectar el botón "Guardar" en las tarjetas del buscador (Dev 2).
-//   - Persistir favoritos en localStorage segmentados por usuario.
-//   - Sistema de estrellas reactivo (rating 1..5).
-//   - Filtrado por rating y ordenamiento (incluida Pila LIFO por timestamp).
-//   - Renderizado del grid y control del Empty State.
-//
-// NOTA: No altera el layout ni el CSS. Se apoya en los ids/clases ya
-// definidos en index.html:
-//   #biblioteca-grid, #biblioteca-empty, #filtro-estrellas, #orden-biblioteca
+// Cambios frente a v1:
+//   - Ahora guarda DOS colecciones separadas por usuario:
+//       * canciones  -> pistas individuales guardadas
+//       * albumes    -> álbumes completos guardados
+//   - Se exponen dos funciones puente para Dev 2:
+//       * inyectarBotonGuardarCancion(cardElement, infoCancion)
+//       * inyectarBotonGuardarAlbum(cardElement, infoAlbum)
+//   - La vista de biblioteca se pinta con dos grids conmutables
+//     (pestañas CANCIONES / ÁLBUMES) que ya existen en el template
+//     temp-biblioteca del index.html.
+//   - Sigue sin tocar el layout ni CSS: solo usa los ids del template.
 // ======================================================================
 
 import { mostrarCyberPopup } from './popup.js';
 
-// ---------- Constantes internas ---------------------------------------
-const STORAGE_KEY = 'biblioteca_deezer'; // objeto raíz { usuario: [albums] }
+// ---------- Constantes ------------------------------------------------
+const STORAGE_KEY = 'biblioteca_deezer';
+// Estructura raíz:
+// {
+//   "usuarioA": { canciones: [ {..}, .. ], albumes: [ {..}, .. ] },
+//   "usuarioB": { ... }
+// }
 
-// Estado de UI (filtro/orden activos) — módulo-privado
+// Estado de UI (pestaña activa, filtro, orden) — módulo-privado.
 const estadoUI = {
-    filtroRating: 'todos',   // 'todos' | '1'..'5'
-    orden: 'recientes'       // 'recientes' | 'antiguos' | 'az' | 'za'
+    tipoActivo:   'canciones',   // 'canciones' | 'albumes'
+    filtroRating: 'todos',
+    orden:        'recientes'
 };
 
 
 // ======================================================================
-// 0. UTILIDADES DE SESIÓN Y LECTURA DEL STORAGE
+// 0. SESIÓN + LECTURA / ESCRITURA DEL STORAGE
 // ======================================================================
 
-/**
- * Obtiene el usuario logueado actualmente (definido por auth.js).
- * Si no hay sesión activa devuelve null; las funciones de escritura
- * abortan en ese caso para no contaminar el storage.
- */
 function obtenerUsuarioActivo() {
     return localStorage.getItem('usuario_activo');
 }
 
-/**
- * Devuelve el objeto raíz de la biblioteca desde localStorage.
- * Estructura garantizada: { "usuario": [ {album}, ... ] }
- */
 function leerRaiz() {
     try {
         return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
@@ -51,40 +49,41 @@ function leerRaiz() {
     }
 }
 
-/**
- * Escribe el objeto raíz completo en localStorage.
- */
 function escribirRaiz(raiz) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(raiz));
 }
 
+/**
+ * Garantiza que el usuario tenga la estructura { canciones:[], albumes:[] }.
+ * Devuelve la referencia al objeto del usuario (mutable).
+ */
+function obtenerContenedorUsuario(raiz, usuario) {
+    if (!raiz[usuario] || typeof raiz[usuario] !== 'object' || Array.isArray(raiz[usuario])) {
+        // Migración suave si venías de v1 (array plano de álbumes).
+        const legacyAlbumes = Array.isArray(raiz[usuario]) ? raiz[usuario] : [];
+        raiz[usuario] = { canciones: [], albumes: legacyAlbumes };
+    }
+    if (!Array.isArray(raiz[usuario].canciones)) raiz[usuario].canciones = [];
+    if (!Array.isArray(raiz[usuario].albumes))   raiz[usuario].albumes   = [];
+    return raiz[usuario];
+}
+
 
 // ======================================================================
-// 1. PUENTE PARA EL DEV 2 - INYECCIÓN DEL BOTÓN "AÑADIR A LA BIBLIOTECA"
+// 1. PUENTES PARA DEV 2 - BOTONES DE GUARDADO EN LAS TARJETAS DEL BUSCADOR
 // ======================================================================
 
 /**
- * Inyecta un botón de guardado dentro de una tarjeta generada por el
- * buscador de la API (Dev 2). No modifica el resto de la tarjeta.
- *
- * @param {HTMLElement} cardElement - Nodo DOM de la tarjeta del buscador.
- * @param {{id:(string|number), titulo:string, artista:string,
- *          cover_url:string, tracks?:Array}} infoAlbum - Datos del álbum.
+ * Utilidad interna: crea un botón de guardado reutilizable (mismo SVG).
+ * @param {string} etiquetaAria
+ * @param {Function} onClick
  */
-export function inyectarBotonGuardar(cardElement, infoAlbum) {
-    if (!cardElement || !infoAlbum || !infoAlbum.id) return;
-
-    // Evita duplicar el botón si la tarjeta se re-renderiza.
-    if (cardElement.querySelector('.btn-guardar-biblioteca')) return;
-
+function crearBotonGuardar(etiquetaAria, onClick) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'btn-guardar-biblioteca';
-    btn.setAttribute('aria-label', `Guardar ${infoAlbum.titulo} en mi biblioteca`);
-    btn.title = 'Guardar en mi biblioteca';
-    btn.dataset.albumId = String(infoAlbum.id);
-
-    // SVG limpio tipo "disquete" (guardado). Hereda color con currentColor.
+    btn.setAttribute('aria-label', etiquetaAria);
+    btn.title = etiquetaAria;
     btn.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
              width="20" height="20" fill="none" stroke="currentColor"
@@ -95,32 +94,103 @@ export function inyectarBotonGuardar(cardElement, infoAlbum) {
             <polyline points="7 3 7 8 15 8"></polyline>
         </svg>
     `;
-
-    // Delegación directa: al hacer clic, se guarda el álbum recibido.
     btn.addEventListener('click', (ev) => {
-        ev.stopPropagation();      // evita disparar handlers de la tarjeta
+        ev.stopPropagation();
         ev.preventDefault();
-        guardarEnBiblioteca(infoAlbum);
+        onClick();
     });
+    return btn;
+}
 
+/**
+ * Inyecta el botón "Guardar canción" en una tarjeta de canción (Dev 2).
+ * @param {HTMLElement} cardElement
+ * @param {{id:(string|number), titulo:string, artista:string,
+ *          cover_url:string, preview_url?:string, duracion?:number,
+ *          album_id?:(string|number), album_titulo?:string}} infoCancion
+ */
+export function inyectarBotonGuardarCancion(cardElement, infoCancion) {
+    if (!cardElement || !infoCancion || infoCancion.id == null) return;
+    if (cardElement.querySelector('.btn-guardar-biblioteca')) return;
+
+    const btn = crearBotonGuardar(
+        `Guardar canción "${infoCancion.titulo}" en mi biblioteca`,
+        () => guardarCancionEnBiblioteca(infoCancion)
+    );
+    btn.dataset.cancionId = String(infoCancion.id);
     cardElement.appendChild(btn);
 }
-// Exposición global para que Dev 2 pueda invocarla sin importar el módulo.
-window.inyectarBotonGuardar = inyectarBotonGuardar;
+
+/**
+ * Inyecta el botón "Guardar álbum" en una tarjeta de álbum (Dev 2).
+ * @param {HTMLElement} cardElement
+ * @param {{id:(string|number), titulo:string, artista:string,
+ *          cover_url:string, tracks?:Array}} infoAlbum
+ */
+export function inyectarBotonGuardarAlbum(cardElement, infoAlbum) {
+    if (!cardElement || !infoAlbum || infoAlbum.id == null) return;
+    if (cardElement.querySelector('.btn-guardar-biblioteca')) return;
+
+    const btn = crearBotonGuardar(
+        `Guardar álbum "${infoAlbum.titulo}" en mi biblioteca`,
+        () => guardarAlbumEnBiblioteca(infoAlbum)
+    );
+    btn.dataset.albumId = String(infoAlbum.id);
+    cardElement.appendChild(btn);
+}
+
+// Alias retrocompatible con la v1 (Dev 2 llamaba a inyectarBotonGuardar).
+export const inyectarBotonGuardar = inyectarBotonGuardarAlbum;
 
 
 // ======================================================================
-// 2. PERSISTENCIA SEGMENTADA POR USUARIO
+// 2. GUARDAR / ELIMINAR (CANCIONES Y ÁLBUMES)
 // ======================================================================
 
 /**
- * Guarda un álbum en la biblioteca del usuario activo.
- * Añade automáticamente rating=0 y timestamp=Date.now().
- * Si el álbum ya existe (mismo id), no lo duplica.
- *
- * @param {Object} album - { id, titulo, artista, cover_url, tracks? }
+ * Guarda una canción individual en la biblioteca del usuario activo.
+ * Añade rating=0 y timestamp para el orden LIFO (Stack).
  */
-export function guardarEnBiblioteca(album) {
+export function guardarCancionEnBiblioteca(cancion) {
+    const usuario = obtenerUsuarioActivo();
+    if (!usuario) {
+        mostrarCyberPopup('ACCESO_REQUERIDO: Inicia sesión para guardar canciones.');
+        return;
+    }
+    if (!cancion || cancion.id == null) return;
+
+    const raiz  = leerRaiz();
+    const store = obtenerContenedorUsuario(raiz, usuario);
+
+    if (store.canciones.some(c => String(c.id) === String(cancion.id))) {
+        mostrarCyberPopup(`"${cancion.titulo}" ya estaba en tu biblioteca.`);
+        return;
+    }
+
+    store.canciones.push({
+        id:           cancion.id,
+        titulo:       cancion.titulo,
+        artista:      cancion.artista,
+        cover_url:    cancion.cover_url,
+        preview_url:  cancion.preview_url || '',
+        duracion:     cancion.duracion || 0,
+        album_id:     cancion.album_id || null,
+        album_titulo: cancion.album_titulo || '',
+        rating:       0,
+        timestamp:    Date.now()
+    });
+
+    escribirRaiz(raiz);
+    mostrarCyberPopup(`CANCIÓN_GUARDADA: "${cancion.titulo}"`);
+    actualizarVistaBiblioteca();
+}
+
+/**
+ * Guarda un álbum completo (metadata + tracks) en la biblioteca.
+ * Un álbum es esencialmente un array de canciones + metadata:
+ * se guarda por referencia (id) para no duplicar por tracks internas.
+ */
+export function guardarAlbumEnBiblioteca(album) {
     const usuario = obtenerUsuarioActivo();
     if (!usuario) {
         mostrarCyberPopup('ACCESO_REQUERIDO: Inicia sesión para guardar álbumes.');
@@ -128,88 +198,79 @@ export function guardarEnBiblioteca(album) {
     }
     if (!album || album.id == null) return;
 
-    const raiz = leerRaiz();
-    const lista = raiz[usuario] || [];
+    const raiz  = leerRaiz();
+    const store = obtenerContenedorUsuario(raiz, usuario);
 
-    // Prevención de duplicados por id
-    if (lista.some(a => String(a.id) === String(album.id))) {
+    if (store.albumes.some(a => String(a.id) === String(album.id))) {
         mostrarCyberPopup(`"${album.titulo}" ya estaba en tu biblioteca.`);
         return;
     }
 
-    // Registro normalizado que se persiste
-    const registro = {
-        id: album.id,
-        titulo: album.titulo,
-        artista: album.artista,
+    store.albumes.push({
+        id:        album.id,
+        titulo:    album.titulo,
+        artista:   album.artista,
         cover_url: album.cover_url,
-        tracks: Array.isArray(album.tracks) ? album.tracks : [],
-        rating: 0,
-        timestamp: Date.now()   // clave para el orden LIFO (Stack)
-    };
+        tracks:    Array.isArray(album.tracks) ? album.tracks : [],
+        rating:    0,
+        timestamp: Date.now()
+    });
 
-    lista.push(registro);
-    raiz[usuario] = lista;
     escribirRaiz(raiz);
-
     mostrarCyberPopup(`ALBUM_GUARDADO: "${album.titulo}"`);
     actualizarVistaBiblioteca();
 }
 
 /**
- * Elimina un álbum de la biblioteca del usuario activo por su id.
- * @param {string|number} albumId
+ * Elimina un item (canción o álbum) según la pestaña indicada.
+ * @param {'canciones'|'albumes'} tipo
+ * @param {string|number} itemId
  */
-export function eliminarDeBiblioteca(albumId) {
+export function eliminarDeBiblioteca(tipo, itemId) {
     const usuario = obtenerUsuarioActivo();
     if (!usuario) return;
 
-    const raiz = leerRaiz();
-    const lista = raiz[usuario] || [];
-    raiz[usuario] = lista.filter(a => String(a.id) !== String(albumId));
-    escribirRaiz(raiz);
+    const raiz  = leerRaiz();
+    const store = obtenerContenedorUsuario(raiz, usuario);
 
+    store[tipo] = store[tipo].filter(x => String(x.id) !== String(itemId));
+
+    escribirRaiz(raiz);
     actualizarVistaBiblioteca();
 }
 
-/**
- * Devuelve el array bruto de álbumes guardados del usuario activo.
- * Nunca aplica filtros/orden; para eso está `obtenerVistaActual()`.
- * @returns {Array}
- */
-export function obtenerAlbumesGuardados() {
+
+// ======================================================================
+// 3. LECTURA CRUDA + VISTA (FILTRO/ORDEN)
+// ======================================================================
+
+/** Devuelve el array crudo del tipo pedido para el usuario activo. */
+export function obtenerItemsGuardados(tipo = 'canciones') {
     const usuario = obtenerUsuarioActivo();
     if (!usuario) return [];
-    const raiz = leerRaiz();
-    return raiz[usuario] || [];
+    const raiz  = leerRaiz();
+    const store = obtenerContenedorUsuario(raiz, usuario);
+    return store[tipo] || [];
 }
 
+// Aliases descriptivos (compat con v1 y comodidad).
+export const obtenerCancionesGuardadas = () => obtenerItemsGuardados('canciones');
+export const obtenerAlbumesGuardados   = () => obtenerItemsGuardados('albumes');
 
-// ======================================================================
-// 3. LÓGICA DE FILTRO Y ORDENAMIENTO
-// ======================================================================
-
-/**
- * Aplica el filtro de rating y el ordenamiento activo sobre la lista
- * cruda del usuario. Devuelve un NUEVO array (no muta el original).
- */
+/** Aplica filtro por rating + orden a la lista del tipo activo. */
 function obtenerVistaActual() {
-    let vista = obtenerAlbumesGuardados().slice(); // copia defensiva
+    let vista = obtenerItemsGuardados(estadoUI.tipoActivo).slice();
 
-    // --- Filtrado por número de estrellas ---
     if (estadoUI.filtroRating !== 'todos') {
         const objetivo = parseInt(estadoUI.filtroRating, 10);
-        vista = vista.filter(a => Number(a.rating) === objetivo);
+        vista = vista.filter(x => Number(x.rating) === objetivo);
     }
 
-    // --- Ordenamiento ---
     switch (estadoUI.orden) {
         case 'az':
-            // Alfabético A-Z por título; fallback al artista si empatan.
             vista.sort((a, b) =>
                 a.titulo.localeCompare(b.titulo) ||
-                a.artista.localeCompare(b.artista)
-            );
+                a.artista.localeCompare(b.artista));
             break;
         case 'za':
             vista.sort((a, b) => b.titulo.localeCompare(a.titulo));
@@ -219,48 +280,38 @@ function obtenerVistaActual() {
             break;
         case 'recientes':
         default:
-            // ESTRUCTURA DE PILA (LIFO): el último añadido queda arriba.
-            // Se emula ordenando descendentemente por timestamp.
-            vista.sort((a, b) => b.timestamp - a.timestamp);
+            vista.sort((a, b) => b.timestamp - a.timestamp); // Stack LIFO
             break;
     }
-
     return vista;
 }
 
 
 // ======================================================================
-// 4. SISTEMA DE ESTRELLAS REACTIVO
+// 4. SISTEMA DE ESTRELLAS
 // ======================================================================
 
 /**
- * Actualiza la calificación de un álbum del usuario activo.
- * Persiste el cambio y re-renderiza el grid para reflejar el filtro.
- *
- * @param {string|number} albumId
- * @param {number} nuevoRating - Valor entre 1 y 5.
+ * Actualiza el rating de un item del tipo indicado.
+ * @param {'canciones'|'albumes'} tipo
+ * @param {string|number} itemId
+ * @param {number} nuevoRating - 1..5
  */
-export function actualizarRating(albumId, nuevoRating) {
+export function actualizarRating(tipo, itemId, nuevoRating) {
     const usuario = obtenerUsuarioActivo();
     if (!usuario) return;
     if (nuevoRating < 1 || nuevoRating > 5) return;
 
-    const raiz = leerRaiz();
-    const lista = raiz[usuario] || [];
-    const idx = lista.findIndex(a => String(a.id) === String(albumId));
+    const raiz  = leerRaiz();
+    const store = obtenerContenedorUsuario(raiz, usuario);
+    const idx   = store[tipo].findIndex(x => String(x.id) === String(itemId));
     if (idx === -1) return;
 
-    lista[idx].rating = nuevoRating;
-    raiz[usuario] = lista;
+    store[tipo][idx].rating = nuevoRating;
     escribirRaiz(raiz);
-
     actualizarVistaBiblioteca();
 }
 
-/**
- * Construye el bloque HTML de 5 estrellas para una tarjeta.
- * Cada estrella conoce su valor mediante data-valor.
- */
 function construirEstrellasHTML(rating) {
     let html = '<div class="rating-stars" role="radiogroup" aria-label="Calificación">';
     for (let i = 1; i <= 5; i++) {
@@ -289,25 +340,37 @@ function construirEstrellasHTML(rating) {
 
 
 // ======================================================================
-// 5. RENDERIZADO DEL GRID Y EMPTY STATE
+// 5. RENDERIZADO: TARJETAS + GRID + EMPTY STATE
 // ======================================================================
 
 /**
- * Genera el nodo DOM de una tarjeta de la biblioteca (no del buscador).
+ * Construye la tarjeta de un item (canción o álbum). Comparten estilo
+ * pero difieren en el subtítulo (artista vs artista · álbum) y en la
+ * cantidad de tracks mostrada.
  */
-function construirTarjetaBiblioteca(album) {
+function construirTarjetaItem(tipo, item) {
     const card = document.createElement('article');
-    card.className = 'album-card biblioteca-card';
-    card.dataset.albumId = String(album.id);
+    card.className = `album-card biblioteca-card biblioteca-card-${tipo}`;
+    card.dataset.itemId = String(item.id);
+    card.dataset.tipo   = tipo;
+
+    const subtitulo = tipo === 'canciones'
+        ? `${item.artista}${item.album_titulo ? ' · ' + item.album_titulo : ''}`
+        : item.artista;
+
+    const meta = tipo === 'albumes'
+        ? `<span class="album-card-meta">${(item.tracks || []).length} pistas</span>`
+        : '';
 
     card.innerHTML = `
         <div class="album-card-cover">
-            <img src="${album.cover_url}" alt="Portada de ${album.titulo}" loading="lazy">
+            <img src="${item.cover_url}" alt="Portada de ${item.titulo}" loading="lazy">
         </div>
         <div class="album-card-info">
-            <h3 class="album-card-title">${album.titulo}</h3>
-            <p class="album-card-artist">${album.artista}</p>
-            ${construirEstrellasHTML(Number(album.rating) || 0)}
+            <h3 class="album-card-title">${item.titulo}</h3>
+            <p class="album-card-artist">${subtitulo}</p>
+            ${meta}
+            ${construirEstrellasHTML(Number(item.rating) || 0)}
             <button type="button" class="btn-eliminar-biblioteca"
                     aria-label="Eliminar de la biblioteca">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
@@ -324,67 +387,103 @@ function construirTarjetaBiblioteca(album) {
         </div>
     `;
 
-    // --- Handlers propios de la tarjeta ---
-
-    // Clic en cualquier estrella -> actualizar rating.
+    // Rating
     card.querySelectorAll('.estrella').forEach(btn => {
         btn.addEventListener('click', (ev) => {
             ev.stopPropagation();
-            const valor = parseInt(btn.dataset.valor, 10);
-            actualizarRating(album.id, valor);
+            actualizarRating(tipo, item.id, parseInt(btn.dataset.valor, 10));
         });
     });
 
-    // Botón eliminar.
+    // Eliminar
     card.querySelector('.btn-eliminar-biblioteca')
         .addEventListener('click', (ev) => {
             ev.stopPropagation();
-            eliminarDeBiblioteca(album.id);
+            eliminarDeBiblioteca(tipo, item.id);
         });
 
     return card;
 }
 
 /**
- * Función central: lee la vista (filtro + orden aplicados), limpia el
- * grid y lo repuebla. Alterna la visibilidad del Empty State.
+ * Función central: aplica filtro/orden sobre la pestaña activa,
+ * limpia el grid correspondiente e inyecta las tarjetas. Alterna
+ * la visibilidad del grid opuesto y del Empty State.
  */
 export function actualizarVistaBiblioteca() {
-    const grid = document.getElementById('biblioteca-grid');
-    const empty = document.getElementById('biblioteca-empty');
-    if (!grid || !empty) return;
+    const gridCanciones = document.getElementById('biblioteca-canciones-grid');
+    const gridAlbumes   = document.getElementById('biblioteca-albumes-grid');
+    const empty         = document.getElementById('biblioteca-empty');
+    if (!gridCanciones || !gridAlbumes || !empty) return;
 
+    // 1) Mostrar solo el grid del tipo activo (el otro se oculta con .hidden).
+    const activo   = estadoUI.tipoActivo;
+    const gridAct  = activo === 'canciones' ? gridCanciones : gridAlbumes;
+    const gridOff  = activo === 'canciones' ? gridAlbumes   : gridCanciones;
+    gridOff.classList.add('hidden');
+    gridOff.innerHTML = '';
+
+    // 2) Calcular la vista (filtro + orden) y limpiar el grid activo.
     const vista = obtenerVistaActual();
+    gridAct.innerHTML = '';
 
-    // Limpieza total del contenedor antes de re-inyectar.
-    grid.innerHTML = '';
-
+    // 3) Empty state contextual.
     if (vista.length === 0) {
+        const titleEl = document.getElementById('biblioteca-empty-title');
+        const msgEl   = document.getElementById('biblioteca-empty-msg');
+        if (titleEl && msgEl) {
+            if (activo === 'canciones') {
+                titleEl.textContent = 'SIN_CANCIONES_GUARDADAS';
+                msgEl.textContent   = 'Aún no has guardado canciones. Búscalas y pulsa el botón de guardar.';
+            } else {
+                titleEl.textContent = 'SIN_ALBUMES_GUARDADOS';
+                msgEl.textContent   = 'Aún no has guardado álbumes. Búscalos y pulsa el botón de guardar.';
+            }
+        }
         empty.classList.remove('hidden');
-        grid.classList.add('hidden');
+        gridAct.classList.add('hidden');
         return;
     }
 
     empty.classList.add('hidden');
-    grid.classList.remove('hidden');
+    gridAct.classList.remove('hidden');
 
-    // DocumentFragment: minimiza reflows al insertar N tarjetas.
     const frag = document.createDocumentFragment();
-    vista.forEach(album => frag.appendChild(construirTarjetaBiblioteca(album)));
-    grid.appendChild(frag);
+    vista.forEach(item => frag.appendChild(construirTarjetaItem(activo, item)));
+    gridAct.appendChild(frag);
 }
 
 
 // ======================================================================
-// 6. INICIALIZACIÓN DE LISTENERS (selectores de filtro y orden)
+// 6. INICIALIZACIÓN DE LISTENERS
 // ======================================================================
 
 /**
- * Enlaza los <select> existentes en el HTML con el estado interno y
- * pinta la biblioteca por primera vez. Debe llamarse una sola vez
- * desde app.js tras cargar el DOM (o tras iniciar sesión).
+ * Debe llamarse UNA VEZ desde app.js justo después de clonar el
+ * template #temp-biblioteca dentro de #main-content (es decir, cuando
+ * el usuario pulsa MY_LIBRARY en el sidebar).
  */
 export function inicializarBiblioteca() {
+    // Pestañas Canciones / Álbumes
+    const tabCanciones = document.getElementById('tab-biblioteca-canciones');
+    const tabAlbumes   = document.getElementById('tab-biblioteca-albumes');
+
+    const activarTab = (tipo) => {
+        estadoUI.tipoActivo = tipo;
+        if (tabCanciones && tabAlbumes) {
+            const esCanc = tipo === 'canciones';
+            tabCanciones.classList.toggle('active',  esCanc);
+            tabAlbumes.classList.toggle('active',   !esCanc);
+            tabCanciones.setAttribute('aria-selected', String(esCanc));
+            tabAlbumes.setAttribute('aria-selected',  String(!esCanc));
+        }
+        actualizarVistaBiblioteca();
+    };
+
+    if (tabCanciones) tabCanciones.addEventListener('click', () => activarTab('canciones'));
+    if (tabAlbumes)   tabAlbumes.addEventListener('click',   () => activarTab('albumes'));
+
+    // Filtro y orden
     const selFiltro = document.getElementById('filtro-estrellas');
     const selOrden  = document.getElementById('orden-biblioteca');
 
@@ -395,7 +494,6 @@ export function inicializarBiblioteca() {
             actualizarVistaBiblioteca();
         });
     }
-
     if (selOrden) {
         estadoUI.orden = selOrden.value || 'recientes';
         selOrden.addEventListener('change', (ev) => {
@@ -410,9 +508,15 @@ export function inicializarBiblioteca() {
 
 
 // ======================================================================
-// 7. EXPOSICIÓN GLOBAL (para Dev 2 y para debugging desde consola)
+// 7. EXPOSICIÓN GLOBAL (para Dev 2 y debugging)
 // ======================================================================
-window.guardarEnBiblioteca     = guardarEnBiblioteca;
-window.eliminarDeBiblioteca    = eliminarDeBiblioteca;
-window.obtenerAlbumesGuardados = obtenerAlbumesGuardados;
-window.actualizarVistaBiblioteca = actualizarVistaBiblioteca;
+window.inyectarBotonGuardarCancion = inyectarBotonGuardarCancion;
+window.inyectarBotonGuardarAlbum   = inyectarBotonGuardarAlbum;
+window.inyectarBotonGuardar        = inyectarBotonGuardarAlbum; // compat v1
+window.guardarCancionEnBiblioteca  = guardarCancionEnBiblioteca;
+window.guardarAlbumEnBiblioteca    = guardarAlbumEnBiblioteca;
+window.eliminarDeBiblioteca        = eliminarDeBiblioteca;
+window.obtenerCancionesGuardadas   = obtenerCancionesGuardadas;
+window.obtenerAlbumesGuardados     = obtenerAlbumesGuardados;
+window.actualizarVistaBiblioteca   = actualizarVistaBiblioteca;
+window.inicializarBiblioteca       = inicializarBiblioteca;
