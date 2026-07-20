@@ -2004,44 +2004,17 @@ body.theme-dark .card-fans {
         width: 55%;
     }
 }
-/* ============================================================
+/* ======================================================================
    ESTILOS DEL MÓDULO DE BIBLIOTECA
    Diseñado con:
    - CSS Grid para la cuadrícula de álbumes.
    - Flexbox para la barra de controles.
-   - Variables CSS para tematización clara/oscura.
-   ============================================================ */
-
-/* ---------- Variables globales (declararlas en :root del CSS
-   principal si no existen; se listan aquí como referencia) ---------- */
-:root {
-    --bg-color: #f5f5f7;
-    --surface-color: #ffffff;
-    --text-color: #1d1d1f;
-    --text-muted: #6e6e73;
-    --accent-color: #ef5466;          /* Rojo/rosa Deezer-like */
-    --star-active: #f5a623;           /* Amarillo estrellas activas */
-    --star-inactive: #d0d0d5;
-    --border-color: #e5e5ea;
-    --shadow-card: 0 4px 14px rgba(0, 0, 0, 0.08);
-    --radius-card: 12px;
-}
-
-/* Sobrescritura para modo oscuro (activado con class="dark" en <html> o <body>) */
-.dark {
-    --bg-color: #121212;
-    --surface-color: #1e1e1e;
-    --text-color: #f5f5f7;
-    --text-muted: #a1a1a6;
-    --border-color: #2c2c2e;
-    --shadow-card: 0 4px 14px rgba(0, 0, 0, 0.5);
-    --star-inactive: #3a3a3c;
-}
+   ====================================================================== */
 
 /* ---------- Utilidad general ---------- */
 .hidden { display: none !important; }
 
-/* ---------- Contenedor principal del módulo ---------- */
+/* ---------- Contenedor principal del módulo (v1) ---------- */
 .biblioteca-section {
     padding: 2rem 1.5rem;
     background-color: var(--bg-color);
@@ -2053,7 +2026,7 @@ body.theme-dark .card-fans {
 .biblioteca-header h2 { margin: 0; font-size: 1.75rem; }
 .biblioteca-subtitulo { color: var(--text-muted); margin: 0.25rem 0 0; }
 
-/* ---------- Barra de controles (Flexbox responsivo) ---------- */
+/* ---------- Barra de controles v1 (Flexbox responsivo) ---------- */
 .biblioteca-controls {
     display: flex;
     flex-wrap: wrap;
@@ -2093,14 +2066,14 @@ body.theme-dark .card-fans {
 }
 .control-select:focus { outline: none; border-color: var(--accent-color); }
 
-/* ---------- Grid de álbumes (Responsivo con auto-fill) ---------- */
+/* ---------- Grid de álbumes original (v1) ---------- */
 .album-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 1.25rem;
 }
 
-/* ---------- Tarjeta individual de álbum ---------- */
+/* ---------- Tarjeta individual de álbum v1 ---------- */
 .album-card {
     background-color: var(--surface-color);
     border-radius: var(--radius-card);
@@ -2128,7 +2101,7 @@ body.theme-dark .card-fans {
 .album-card__title  { margin: 0; font-size: 1rem; font-weight: 600; color: var(--text-color); }
 .album-card__artist { margin: 0; font-size: 0.85rem; color: var(--text-muted); }
 
-/* ---------- Componente de estrellas ---------- */
+/* ---------- Componente de estrellas v1 ---------- */
 .rating-stars {
     display: inline-flex;
     gap: 0.15rem;
@@ -2144,7 +2117,7 @@ body.theme-dark .card-fans {
 .rating-stars .star-svg:hover { transform: scale(1.15); }
 .rating-stars .star-svg.active { color: var(--star-active); }
 
-/* ---------- Botones SVG (guardar / eliminar) ---------- */
+/* ---------- Botones SVG (guardar / eliminar) v1 ---------- */
 .icon-btn {
     background: transparent;
     border: none;
@@ -2182,7 +2155,7 @@ body.theme-dark .card-fans {
 .btn-guardar:hover     { opacity: 0.9; }
 .btn-guardar.guardado  { background-color: #4caf50; }
 
-/* ---------- Empty state ---------- */
+/* ---------- Empty state v1 ---------- */
 .biblioteca-empty {
     display: flex;
     flex-direction: column;
@@ -2198,24 +2171,26 @@ body.theme-dark .card-fans {
 }
 .biblioteca-empty h3 { color: var(--text-color); margin: 0 0 0.5rem; }
 
-/* ---------- Responsivo: pantallas pequeñas ---------- */
+/* ---------- Responsivo v1 ---------- */
 @media (max-width: 480px) {
     .album-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; }
     .biblioteca-controls { flex-direction: column; }
 }
+
+
 /* ======================================================================
-   BIBLIOTECA v2 — vista MY_LIBRARY (temp-biblioteca)
+   BIBLIOTECA v2 — VISTA MY_LIBRARY (temp-biblioteca)
    Estética cyberpunk: alineada con el buscador (Orbitron, prompt visual,
-   glow violeta, bordes duros). Sólo añade clases nuevas; no toca las
-   viejas .biblioteca-* de arriba para no romper nada existente.
+   glow violeta, bordes duros). 
+   Encapsulado completo para evitar colapsar layouts previos.
    ====================================================================== */
 #library-view {
     color: var(--text-color, #e6e6f0);
     min-height: 100%;
     padding: 1.75rem 2rem 6rem;
     background:
-            linear-gradient(180deg, rgba(148, 6, 184, 0.05), transparent 40%),
-            var(--bg-color, #0d0612);
+        linear-gradient(180deg, rgba(148, 6, 184, 0.05), transparent 40%),
+        var(--bg-color, #0d0612);
 }
 .library-wrapper {
     display: flex;
@@ -2241,7 +2216,7 @@ body.theme-dark .card-fans {
     color: var(--text-muted, #9a94a8);
     letter-spacing: 0.02em;
 }
-/* Barra de controles (pestañas + filtros) */
+/* Barra de controles v2 (pestañas + filtros) */
 .library-controls {
     display: grid;
     grid-template-columns: auto 1fr 1fr;
@@ -2282,7 +2257,7 @@ body.theme-dark .card-fans {
     color: #fff;
     box-shadow: inset 0 -2px 0 #fff, 0 0 12px rgba(148, 6, 184, 0.6);
 }
-/* Grupos de select (filtro / orden) */
+/* Grupos de select v2 (filtro / orden) */
 .library-controls .control-group {
     display: flex;
     flex-direction: column;
@@ -2301,8 +2276,8 @@ body.theme-dark .card-fans {
     -webkit-appearance: none;
     padding: 0.55rem 2.2rem 0.55rem 0.85rem;
     background:
-            linear-gradient(45deg, transparent 50%, #b892d4 50%) calc(100% - 14px) 55% / 6px 6px no-repeat,
-            rgba(13, 6, 18, 0.85);
+        linear-gradient(45deg, transparent 50%, #b892d4 50%) calc(100% - 14px) 55% / 6px 6px no-repeat,
+        rgba(13, 6, 18, 0.85);
     color: #f0e6ff;
     border: 1px solid rgba(148, 6, 184, 0.55);
     border-radius: 4px;
@@ -2317,16 +2292,14 @@ body.theme-dark .card-fans {
     box-shadow: 0 0 0 2px rgba(148, 6, 184, 0.3);
 }
 .library-controls .control-select option { background: #0d0612; color: #f0e6ff; }
-/* Grid dinámico dentro de la biblioteca */
-#biblioteca-dynamic-content {
-    min-height: 200px;
-}
-#biblioteca-dynamic-content .album-grid {
+
+/* Grid dinámico blindado con el namespace .lib-album-grid */
+#biblioteca-dynamic-content .lib-album-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
     gap: 1.25rem;
 }
-/* Tarjetas de la biblioteca (canciones y álbumes) */
+/* Tarjetas de la biblioteca v2 (canciones y álbumes) */
 .biblioteca-card {
     position: relative;
     display: flex;
@@ -2386,7 +2359,7 @@ body.theme-dark .card-fans {
     color: #b892d4;
     text-transform: uppercase;
 }
-/* Estrellas de rating */
+/* Estrellas de rating v2 */
 .rating-stars {
     display: inline-flex;
     gap: 0.15rem;
@@ -2409,7 +2382,8 @@ body.theme-dark .card-fans {
     filter: drop-shadow(0 0 4px rgba(255, 212, 71, 0.55));
 }
 .rating-stars .estrella.estrella-vacia { color: #4a3760; }
-/* Botón "eliminar de la biblioteca" */
+
+/* Botón "eliminar de la biblioteca" v2 */
 .btn-eliminar-biblioteca {
     margin-top: 0.45rem;
     display: inline-flex;
@@ -2433,7 +2407,8 @@ body.theme-dark .card-fans {
     color: #ffbcd0;
 }
 .btn-eliminar-biblioteca svg { width: 14px; height: 14px; }
-/* Botón "guardar en biblioteca" que Dev-2 inyecta en las cards del buscador */
+
+/* Botón "guardar en biblioteca" flotante seguro */
 .btn-guardar-biblioteca {
     position: absolute;
     top: 8px;
@@ -2460,16 +2435,18 @@ body.theme-dark .card-fans {
     transform: translateY(-1px);
 }
 .btn-guardar-biblioteca svg { width: 18px; height: 18px; }
-/* Asegurar posicionamiento del botón sobre .album-card genérica (buscador) */
-.album-card { position: relative; }
-/* En las filas del tracklist, el botón queda como control secundario a la derecha */
-.track-row {
+
+/* Refactorización contextual para evitar herencias globales molestas */
+.album-card.relative-context { position: relative; }
+
+/* Filas de canciones protegidas bajo namespace propio de biblioteca (.lib-track-row) */
+.lib-track-row {
     position: relative;
     display: flex;
     align-items: center;
     gap: 0.75rem;
 }
-.track-row .btn-guardar-biblioteca {
+.lib-track-row .btn-guardar-biblioteca {
     position: static;
     width: 30px;
     height: 30px;
@@ -2478,20 +2455,21 @@ body.theme-dark .card-fans {
     background: transparent;
     border-color: rgba(148, 6, 184, 0.35);
 }
-.track-row .btn-guardar-biblioteca:hover {
+.lib-track-row .btn-guardar-biblioteca:hover {
     background: rgba(148, 6, 184, 0.9);
 }
-/* Botón "guardar álbum completo" en la vista de detalle de álbum */
+
+/* Botón "guardar álbum completo" en la vista de detalle */
 .btn-guardar-album-hero {
     margin-top: 1rem;
     align-self: flex-start;
 }
-/* Empty state reutilizado dentro de la biblioteca */
+/* Empty state específico reutilizado dentro de la biblioteca */
 #biblioteca-dynamic-content .empty-state-card {
     margin: 2rem auto;
     max-width: 520px;
 }
-/* Responsivo */
+/* Responsivo v2 */
 @media (max-width: 900px) {
     .library-controls {
         grid-template-columns: 1fr 1fr;
@@ -2505,7 +2483,7 @@ body.theme-dark .card-fans {
     }
     .library-tabs { width: 100%; }
     .library-tab { flex: 1; text-align: center; }
-    #biblioteca-dynamic-content .album-grid {
+    #biblioteca-dynamic-content .lib-album-grid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 0.85rem;
     }

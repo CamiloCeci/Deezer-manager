@@ -348,12 +348,13 @@
             </div>
         </section>
     </template>
-        <template id="temp-biblioteca">
+
+    <!-- PLANTILLA DE LA BIBLIOTECA (Trabajo del Programador 3) -->
+    <template id="temp-biblioteca">
         <section id="library-view">
             <div class="library-wrapper">
 
-                <!-- ENCABEZADO ESTILO TERMINAL, alineado con la estética
-                    del buscador (misma tipografía / mismo prompt visual) -->
+                <!-- ENCABEZADO ESTILO TERMINAL -->
                 <div class="library-header-bar">
                     <h2 class="section-cyber-title">// MI_BIBLIOTECA</h2>
                     <p class="library-subtitle">
@@ -409,20 +410,20 @@
                     </div>
                 </div>
 
-                <!-- CONTENEDOR DINÁMICO: se muestra uno u otro grid -->
+                <!-- CONTENEDOR DINÁMICO COMPLETAMENTE ENCAPSULADO (.lib-album-grid) -->
                 <div id="biblioteca-dynamic-content">
 
                     <!-- GRID DE CANCIONES -->
-                    <div id="biblioteca-canciones-grid" class="album-grid" aria-live="polite">
+                    <div id="biblioteca-canciones-grid" class="lib-album-grid" aria-live="polite">
                         <!-- Inyectado por JS -->
                     </div>
 
                     <!-- GRID DE ÁLBUMES (oculto por defecto) -->
-                    <div id="biblioteca-albumes-grid" class="album-grid hidden" aria-live="polite">
+                    <div id="biblioteca-albumes-grid" class="lib-album-grid hidden" aria-live="polite">
                         <!-- Inyectado por JS -->
                     </div>
 
-                    <!-- EMPTY STATE (compartido: cambia el texto según pestaña) -->
+                    <!-- EMPTY STATE -->
                     <div id="biblioteca-empty" class="empty-state-card hidden" role="status">
                         <div class="empty-svg-bg">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
