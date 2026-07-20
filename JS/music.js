@@ -26,6 +26,64 @@ async function fetchSeguro(url) {
     }
     return await response.json();
 }
+/**
+ * Inyecta el botón "guardar álbum" en una tarjeta del catálogo del
+ * artista, pero interceptando el click para hacer un pre-fetch del
+ * tracklist completo (para que la biblioteca funcione offline).
+ */
+function inyectarBotonGuardarAlbumConTracks(cardElement, albumApi) {
+    // Base: crea el botón con tracks vacíos (por compatibilidad visual).
+    inyectarBotonGuardarAlbum(cardElement, {
+        id: albumApi.id,
+        titulo: albumApi.title,
+        artista: (albumApi.artist && albumApi.artist.name) || '',
+        cover_url: albumApi.cover_medium || albumApi.cover_big || '',
+        tracks: []
+    });
+    const btn = cardElement.querySelector('.btn-guardar-biblioteca');
+    if (!btn) return;
+    // Sustituimos el handler por uno que hace pre-fetch del tracklist.
+    const nuevo = btn.cloneNode(true);
+    btn.replaceWith(nuevo);
+    nuevo.addEventListener('click', async (ev) => {
+        ev.stopPropagation();
+        ev.preventDefault();
+        const originalHtml = nuevo.innerHTML;
+        nuevo.disabled = true;
+        nuevo.innerHTML = '...';
+        try {
+            const [meta, tracksData] = await Promise.all([
+                fetchSeguro(`${BASE_API_URL}/album/${albumApi.id}`),
+                fetchSeguro(`${BASE_API_URL}/album/${albumApi.id}/tracks`)
+            ]);
+            guardarAlbumEnBiblioteca({
+                id: meta.id,
+                titulo: meta.title,
+                artista: (meta.artist && meta.artist.name) || '',
+                cover_url: meta.cover_medium || meta.cover_big || albumApi.cover_medium || '',
+                tracks: (tracksData.data || []).map(t => ({
+                    id: t.id,
+                    titulo: t.title,
+                    preview_url: t.preview || '',
+                    duracion: t.duration || 0
+                }))
+            });
+        } catch (e) {
+            console.error('[music] Error pre-fetch tracklist álbum:', e);
+            // Fallback: guardar sin tracks para no bloquear al usuario.
+            guardarAlbumEnBiblioteca({
+                id: albumApi.id,
+                titulo: albumApi.title,
+                artista: (albumApi.artist && albumApi.artist.name) || '',
+                cover_url: albumApi.cover_medium || '',
+                tracks: []
+            });
+        } finally {
+            nuevo.disabled = false;
+            nuevo.innerHTML = originalHtml;
+        }
+    });
+}
 
 export function renderBuscador() {
     inicializarEventosBuscador();
@@ -291,14 +349,9 @@ async function fetchSiguienteBloqueAlbumes() {
                 });
 
                 contenedorAlbums.appendChild(item);
-                // Botón guardar álbum en la tarjeta del catálogo del artista
-                inyectarBotonGuardarAlbum(item, {
-                    id: album.id,
-                    titulo: album.title,
-                    artista: (album.artist && album.artist.name) || '',
-                    cover_url: album.cover_medium || album.cover_big || '',
-                    tracks: []
-                });
+                // Botón guardar álbum: PRE-FETCH del tracklist completo
+                // para que la biblioteca funcione 100% offline luego.
+                inyectarBotonGuardarAlbumConTracks(item, album);
             });
 
             currentAlbumIndex += data.data.length;

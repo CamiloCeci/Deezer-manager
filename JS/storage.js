@@ -15,20 +15,23 @@
 // ======================================================================
 
 import { mostrarCyberPopup } from './popup.js';
+import { setTracklistYReproducir } from './player.js';
 
 // ---------- Constantes ------------------------------------------------
-const STORAGE_KEY = 'biblioteca_deezer';
-// Estructura raíz:
-// {
-//   "usuarioA": { canciones: [ {..}, .. ], albumes: [ {..}, .. ] },
-//   "usuarioB": { ... }
-// }
-
+// Clave por usuario: `mis_favoritos_${usuario}` para aislar sesiones.
+// Se conserva la clave legada `biblioteca_deezer` únicamente para
+// migración transparente al primer arranque.
+const LEGACY_ROOT_KEY = 'biblioteca_deezer';
+const claveDeUsuario  = (usuario) => `mis_favoritos_${usuario}`;
 // Estado de UI (pestaña activa, filtro, orden) — módulo-privado.
 const estadoUI = {
     tipoActivo:   'canciones',   // 'canciones' | 'albumes'
     filtroRating: 'todos',
-    orden:        'recientes'
+    orden:        'recientes',
+    // Vista actual: 'grid' (listado) | 'detalle' (ficha individual offline)
+    vista:        'grid',
+    detalleTipo:  null,
+    detalleId:    null
 };
 
 
@@ -40,32 +43,49 @@ function obtenerUsuarioActivo() {
     return localStorage.getItem('usuario_activo');
 }
 
-function leerRaiz() {
+/**
+ * Migra la estructura legada `biblioteca_deezer` (una raíz compartida con
+ * subclaves por usuario) a claves independientes `mis_favoritos_<usuario>`.
+ * Solo se ejecuta si aún existe la raíz vieja.
+ */
+function migrarLegadoSiHaceFalta() {
+    const legacy = localStorage.getItem(LEGACY_ROOT_KEY);
+    if (!legacy) return;
     try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+        const raiz = JSON.parse(legacy) || {};
+        Object.keys(raiz).forEach((usuario) => {
+            const dst = claveDeUsuario(usuario);
+            if (localStorage.getItem(dst)) return; // no pisar datos nuevos
+            const bloque = raiz[usuario];
+            const normalizado = Array.isArray(bloque)
+                ? { canciones: [], albumes: bloque }
+                : {
+                      canciones: Array.isArray(bloque?.canciones) ? bloque.canciones : [],
+                      albumes:   Array.isArray(bloque?.albumes)   ? bloque.albumes   : []
+                  };
+            localStorage.setItem(dst, JSON.stringify(normalizado));
+        });
+    } catch (e) {
+        console.warn('[storage] Migración legada omitida:', e);
+    }
+    localStorage.removeItem(LEGACY_ROOT_KEY);
+}
+function leerContenedor(usuario) {
+    migrarLegadoSiHaceFalta();
+    try {
+        const raw = localStorage.getItem(claveDeUsuario(usuario));
+        const parsed = raw ? JSON.parse(raw) : null;
+        const store = parsed && typeof parsed === 'object' ? parsed : {};
+        if (!Array.isArray(store.canciones)) store.canciones = [];
+        if (!Array.isArray(store.albumes))   store.albumes   = [];
+        return store;
     } catch (e) {
         console.warn('[storage] JSON corrupto, se reinicia.', e);
-        return {};
+        return { canciones: [], albumes: [] };
     }
 }
-
-function escribirRaiz(raiz) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(raiz));
-}
-
-/**
- * Garantiza que el usuario tenga la estructura { canciones:[], albumes:[] }.
- * Devuelve la referencia al objeto del usuario (mutable).
- */
-function obtenerContenedorUsuario(raiz, usuario) {
-    if (!raiz[usuario] || typeof raiz[usuario] !== 'object' || Array.isArray(raiz[usuario])) {
-        // Migración suave si venías de v1 (array plano de álbumes).
-        const legacyAlbumes = Array.isArray(raiz[usuario]) ? raiz[usuario] : [];
-        raiz[usuario] = { canciones: [], albumes: legacyAlbumes };
-    }
-    if (!Array.isArray(raiz[usuario].canciones)) raiz[usuario].canciones = [];
-    if (!Array.isArray(raiz[usuario].albumes))   raiz[usuario].albumes   = [];
-    return raiz[usuario];
+function escribirContenedor(usuario, store) {
+    localStorage.setItem(claveDeUsuario(usuario), JSON.stringify(store));
 }
 
 
@@ -159,8 +179,7 @@ export function guardarCancionEnBiblioteca(cancion) {
     }
     if (!cancion || cancion.id == null) return;
 
-    const raiz  = leerRaiz();
-    const store = obtenerContenedorUsuario(raiz, usuario);
+      const store = leerContenedor(usuario);
 
     if (store.canciones.some(c => String(c.id) === String(cancion.id))) {
         mostrarCyberPopup(`"${cancion.titulo}" ya estaba en tu biblioteca.`);
@@ -180,7 +199,7 @@ export function guardarCancionEnBiblioteca(cancion) {
         timestamp:    Date.now()
     });
 
-    escribirRaiz(raiz);
+    escribirContenedor(usuario, store);
     mostrarCyberPopup(`CANCIÓN_GUARDADA: "${cancion.titulo}"`);
     actualizarVistaBiblioteca();
 }
@@ -198,8 +217,8 @@ export function guardarAlbumEnBiblioteca(album) {
     }
     if (!album || album.id == null) return;
 
-    const raiz  = leerRaiz();
-    const store = obtenerContenedorUsuario(raiz, usuario);
+  const store = leerContenedor(usuario);
+  
 
     if (store.albumes.some(a => String(a.id) === String(album.id))) {
         mostrarCyberPopup(`"${album.titulo}" ya estaba en tu biblioteca.`);
@@ -216,7 +235,7 @@ export function guardarAlbumEnBiblioteca(album) {
         timestamp: Date.now()
     });
 
-    escribirRaiz(raiz);
+     escribirContenedor(usuario, store);
     mostrarCyberPopup(`ALBUM_GUARDADO: "${album.titulo}"`);
     actualizarVistaBiblioteca();
 }
@@ -230,12 +249,19 @@ export function eliminarDeBiblioteca(tipo, itemId) {
     const usuario = obtenerUsuarioActivo();
     if (!usuario) return;
 
-    const raiz  = leerRaiz();
-    const store = obtenerContenedorUsuario(raiz, usuario);
+    const store = leerContenedor(usuario);
 
     store[tipo] = store[tipo].filter(x => String(x.id) !== String(itemId));
 
-    escribirRaiz(raiz);
+    escribirContenedor(usuario, store);
+    // Si estábamos viendo el detalle del item eliminado, volvemos al grid.
+    if (estadoUI.vista === 'detalle'
+        && estadoUI.detalleTipo === tipo
+        && String(estadoUI.detalleId) === String(itemId)) {
+        estadoUI.vista = 'grid';
+        estadoUI.detalleTipo = null;
+        estadoUI.detalleId   = null;
+    }
     actualizarVistaBiblioteca();
 }
 
@@ -248,8 +274,7 @@ export function eliminarDeBiblioteca(tipo, itemId) {
 export function obtenerItemsGuardados(tipo = 'canciones') {
     const usuario = obtenerUsuarioActivo();
     if (!usuario) return [];
-    const raiz  = leerRaiz();
-    const store = obtenerContenedorUsuario(raiz, usuario);
+        const store = leerContenedor(usuario);
     return store[tipo] || [];
 }
 
@@ -259,7 +284,7 @@ export const obtenerAlbumesGuardados   = () => obtenerItemsGuardados('albumes');
 
 /** Aplica filtro por rating + orden a la lista del tipo activo. */
 function obtenerVistaActual() {
-    let vista = obtenerItemsGuardados(estadoUI.tipoActivo).slice();
+     let vista = obtenerItemsGuardados(estadoUI.tipoActivo).slice();
 
     if (estadoUI.filtroRating !== 'todos') {
         const objetivo = parseInt(estadoUI.filtroRating, 10);
@@ -274,6 +299,16 @@ function obtenerVistaActual() {
             break;
         case 'za':
             vista.sort((a, b) => b.titulo.localeCompare(a.titulo));
+            break;
+        case 'artista-az':
+            vista.sort((a, b) =>
+                (a.artista || '').localeCompare(b.artista || '') ||
+                (a.titulo  || '').localeCompare(b.titulo  || ''));
+            break;
+        case 'artista-za':
+            vista.sort((a, b) =>
+                (b.artista || '').localeCompare(a.artista || '') ||
+                (b.titulo  || '').localeCompare(a.titulo  || ''));
             break;
         case 'antiguos':
             vista.sort((a, b) => a.timestamp - b.timestamp); // FIFO
@@ -302,13 +337,12 @@ export function actualizarRating(tipo, itemId, nuevoRating) {
     if (!usuario) return;
     if (nuevoRating < 1 || nuevoRating > 5) return;
 
-    const raiz  = leerRaiz();
-    const store = obtenerContenedorUsuario(raiz, usuario);
+    const store = leerContenedor(usuario);
     const idx   = store[tipo].findIndex(x => String(x.id) === String(itemId));
     if (idx === -1) return;
 
     store[tipo][idx].rating = nuevoRating;
-    escribirRaiz(raiz);
+    escribirContenedor(usuario, store);
     actualizarVistaBiblioteca();
 }
 
@@ -387,6 +421,17 @@ function construirTarjetaItem(tipo, item) {
         </div>
     `;
 
+    // Abrir detalle offline al pulsar la portada o el título
+    card.querySelector('.album-card-cover')
+        ?.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            abrirDetalleItem(tipo, item.id);
+        });
+    card.querySelector('.album-card-title')
+        ?.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            abrirDetalleItem(tipo, item.id);
+        });
     // Rating
     card.querySelectorAll('.estrella').forEach(btn => {
         btn.addEventListener('click', (ev) => {
@@ -415,6 +460,29 @@ export function actualizarVistaBiblioteca() {
     const gridAlbumes   = document.getElementById('biblioteca-albumes-grid');
     const empty         = document.getElementById('biblioteca-empty');
     if (!gridCanciones || !gridAlbumes || !empty) return;
+    // Contenedor de detalle (se crea perezosamente la primera vez).
+    const dyn = document.getElementById('biblioteca-dynamic-content');
+    let detalleBox = document.getElementById('biblioteca-detalle');
+    if (!detalleBox && dyn) {
+        detalleBox = document.createElement('div');
+        detalleBox.id = 'biblioteca-detalle';
+        detalleBox.className = 'biblioteca-detalle hidden';
+        dyn.appendChild(detalleBox);
+    }
+    // Sub-vista: DETALLE OFFLINE de un item guardado.
+    if (estadoUI.vista === 'detalle' && detalleBox) {
+        gridCanciones.classList.add('hidden');
+        gridAlbumes.classList.add('hidden');
+        empty.classList.add('hidden');
+        renderDetalleItem(detalleBox);
+        detalleBox.classList.remove('hidden');
+        return;
+    }
+    if (detalleBox) {
+        detalleBox.classList.add('hidden');
+        detalleBox.innerHTML = '';
+    }
+
 
     // 1) Mostrar solo el grid del tipo activo (el otro se oculta con .hidden).
     const activo   = estadoUI.tipoActivo;
@@ -451,6 +519,118 @@ export function actualizarVistaBiblioteca() {
     const frag = document.createDocumentFragment();
     vista.forEach(item => frag.appendChild(construirTarjetaItem(activo, item)));
     gridAct.appendChild(frag);
+    // ======================================================================
+// 5.b VISTA DETALLE OFFLINE (canción o álbum guardado)
+// ======================================================================
+function abrirDetalleItem(tipo, itemId) {
+    estadoUI.vista       = 'detalle';
+    estadoUI.detalleTipo = tipo;
+    estadoUI.detalleId   = itemId;
+    actualizarVistaBiblioteca();
+}
+function volverAlGridBiblioteca() {
+    estadoUI.vista       = 'grid';
+    estadoUI.detalleTipo = null;
+    estadoUI.detalleId   = null;
+    actualizarVistaBiblioteca();
+}
+function formatearDuracionSeg(segundos) {
+    const s = Number(segundos) || 0;
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    return `${m}:${r < 10 ? '0' : ''}${r}`;
+}
+function renderDetalleItem(contenedor) {
+    const items = obtenerItemsGuardados(estadoUI.detalleTipo);
+    const item  = items.find(x => String(x.id) === String(estadoUI.detalleId));
+    if (!item) {
+        contenedor.innerHTML = `
+            <button type="button" class="btn-cyber-outline btn-volver-biblioteca">
+                &larr; VOLVER_A_LA_BIBLIOTECA
+            </button>
+            <p class="error-msg">// ITEM_NO_ENCONTRADO_EN_BIBLIOTECA</p>`;
+        contenedor.querySelector('.btn-volver-biblioteca')
+            .addEventListener('click', volverAlGridBiblioteca);
+        return;
+    }
+    // Construir tracklist offline (para álbumes) o pista única (canciones).
+    const tracksSrc = estadoUI.detalleTipo === 'albumes'
+        ? (Array.isArray(item.tracks) ? item.tracks : [])
+        : [{
+              id:          item.id,
+              titulo:      item.titulo,
+              preview_url: item.preview_url,
+              duracion:    item.duracion
+          }];
+    const tracksPlayables = tracksSrc.map(t => ({
+        id:       t.id,
+        title:    t.titulo,
+        preview:  t.preview_url || '',
+        duration: t.duracion || 0,
+        album:    { title: item.titulo, cover_medium: item.cover_url }
+    }));
+    let tracksHtml = '';
+    if (tracksSrc.length === 0) {
+        tracksHtml = `<p class="empty-msg">// TRACKLIST_NO_DISPONIBLE_OFFLINE</p>`;
+    } else {
+        tracksSrc.forEach((t, i) => {
+            const tienePreview = t.preview_url && t.preview_url.trim() !== '';
+            const cls = tienePreview ? '' : 'track-disabled';
+            tracksHtml += `
+                <div class="track-row ${cls}" data-index="${i}" style="cursor:${tienePreview?'pointer':'not-allowed'};">
+                    <span class="track-num">${i + 1 < 10 ? '0' : ''}${i + 1}</span>
+                    <div class="track-meta">
+                        <span class="track-title">${t.titulo}</span>
+                    </div>
+                    <span class="track-duration">${tienePreview ? formatearDuracionSeg(t.duracion) : '[RESTRICTED]'}</span>
+                </div>`;
+        });
+    }
+    contenedor.innerHTML = `
+        <button type="button" class="btn-cyber-outline btn-volver-biblioteca">
+            &larr; VOLVER_A_LA_BIBLIOTECA
+        </button>
+        <div class="album-horizontal-card biblioteca-detalle-card">
+            <div class="album-horizontal-img">
+                <img src="${item.cover_url}" alt="Portada de ${item.titulo}">
+            </div>
+            <div class="album-horizontal-info">
+                <span class="detalle-tag">// ${estadoUI.detalleTipo === 'albumes' ? 'ALBUM_OFFLINE' : 'CANCION_OFFLINE'}</span>
+                <h1 class="album-horizontal-title">${item.titulo}</h1>
+                <p class="album-card-artist">${item.artista || ''}</p>
+                <div class="album-meta-grid">
+                    <div class="album-meta-item"><strong>TRACKS:</strong> ${tracksSrc.length}</div>
+                    <div class="album-meta-item"><strong>GUARDADO:</strong> ${new Date(item.timestamp).toLocaleDateString()}</div>
+                </div>
+                <div class="detalle-rating-wrapper">
+                    <span class="detalle-rating-label">TU_CALIFICACION:</span>
+                    ${construirEstrellasHTML(Number(item.rating) || 0)}
+                </div>
+            </div>
+        </div>
+        <div class="top-tracks-section">
+            <h3 class="section-cyber-title">// TRACKLIST_OFFLINE</h3>
+            <div class="tracks-list-container">${tracksHtml}</div>
+        </div>
+    `;
+    contenedor.querySelector('.btn-volver-biblioteca')
+        .addEventListener('click', volverAlGridBiblioteca);
+    contenedor.querySelectorAll('.estrella').forEach(btn => {
+        btn.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            actualizarRating(estadoUI.detalleTipo, item.id, parseInt(btn.dataset.valor, 10));
+        });
+    });
+    contenedor.querySelectorAll('.track-row').forEach(row => {
+        if (row.classList.contains('track-disabled')) return;
+        row.addEventListener('click', () => {
+            const idx = parseInt(row.dataset.index, 10);
+            window.currentTracksContext = tracksPlayables;
+            setTracklistYReproducir(tracksPlayables, idx);
+        });
+    });
+}
+
 }
 
 
@@ -470,6 +650,10 @@ export function inicializarBiblioteca() {
 
     const activarTab = (tipo) => {
         estadoUI.tipoActivo = tipo;
+        // Cambiar de pestaña siempre saca al usuario del detalle.
+        estadoUI.vista       = 'grid';
+        estadoUI.detalleTipo = null;
+        estadoUI.detalleId   = null;
         if (tabCanciones && tabAlbumes) {
             const esCanc = tipo === 'canciones';
             tabCanciones.classList.toggle('active',  esCanc);
@@ -486,6 +670,18 @@ export function inicializarBiblioteca() {
     // Filtro y orden
     const selFiltro = document.getElementById('filtro-estrellas');
     const selOrden  = document.getElementById('orden-biblioteca');
+    // Añadir opciones de orden por artista si aún no están (mantiene el
+    // HTML original intacto y aporta orden alfabético por artista).
+    if (selOrden && !selOrden.querySelector('option[value="artista-az"]')) {
+        const optAz = document.createElement('option');
+        optAz.value = 'artista-az';
+        optAz.textContent = 'Artista (A-Z)';
+        const optZa = document.createElement('option');
+        optZa.value = 'artista-za';
+        optZa.textContent = 'Artista (Z-A)';
+        selOrden.appendChild(optAz);
+        selOrden.appendChild(optZa);
+    }
 
     if (selFiltro) {
         estadoUI.filtroRating = selFiltro.value || 'todos';
