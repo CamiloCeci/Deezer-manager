@@ -70,6 +70,7 @@ function migrarLegadoSiHaceFalta() {
     }
     localStorage.removeItem(LEGACY_ROOT_KEY);
 }
+
 function leerContenedor(usuario) {
     migrarLegadoSiHaceFalta();
     try {
@@ -84,6 +85,7 @@ function leerContenedor(usuario) {
         return { canciones: [], albumes: [] };
     }
 }
+
 function escribirContenedor(usuario, store) {
     localStorage.setItem(claveDeUsuario(usuario), JSON.stringify(store));
 }
@@ -179,7 +181,7 @@ export function guardarCancionEnBiblioteca(cancion) {
     }
     if (!cancion || cancion.id == null) return;
 
-      const store = leerContenedor(usuario);
+    const store = leerContenedor(usuario);
 
     if (store.canciones.some(c => String(c.id) === String(cancion.id))) {
         mostrarCyberPopup(`"${cancion.titulo}" ya estaba en tu biblioteca.`);
@@ -217,8 +219,7 @@ export function guardarAlbumEnBiblioteca(album) {
     }
     if (!album || album.id == null) return;
 
-  const store = leerContenedor(usuario);
-  
+    const store = leerContenedor(usuario);
 
     if (store.albumes.some(a => String(a.id) === String(album.id))) {
         mostrarCyberPopup(`"${album.titulo}" ya estaba en tu biblioteca.`);
@@ -235,7 +236,7 @@ export function guardarAlbumEnBiblioteca(album) {
         timestamp: Date.now()
     });
 
-     escribirContenedor(usuario, store);
+    escribirContenedor(usuario, store);
     mostrarCyberPopup(`ALBUM_GUARDADO: "${album.titulo}"`);
     actualizarVistaBiblioteca();
 }
@@ -274,7 +275,7 @@ export function eliminarDeBiblioteca(tipo, itemId) {
 export function obtenerItemsGuardados(tipo = 'canciones') {
     const usuario = obtenerUsuarioActivo();
     if (!usuario) return [];
-        const store = leerContenedor(usuario);
+    const store = leerContenedor(usuario);
     return store[tipo] || [];
 }
 
@@ -284,7 +285,7 @@ export const obtenerAlbumesGuardados   = () => obtenerItemsGuardados('albumes');
 
 /** Aplica filtro por rating + orden a la lista del tipo activo. */
 function obtenerVistaActual() {
-     let vista = obtenerItemsGuardados(estadoUI.tipoActivo).slice();
+    let vista = obtenerItemsGuardados(estadoUI.tipoActivo).slice();
 
     if (estadoUI.filtroRating !== 'todos') {
         const objetivo = parseInt(estadoUI.filtroRating, 10);
@@ -308,7 +309,7 @@ function obtenerVistaActual() {
         case 'artista-za':
             vista.sort((a, b) =>
                 (b.artista || '').localeCompare(a.artista || '') ||
-                (b.titulo  || '').localeCompare(a.titulo  || ''));
+                (b.titulo  || '').localeCompare(b.titulo  || ''));
             break;
         case 'antiguos':
             vista.sort((a, b) => a.timestamp - b.timestamp); // FIFO
@@ -387,6 +388,7 @@ function construirTarjetaItem(tipo, item) {
     card.className = `album-card biblioteca-card biblioteca-card-${tipo}`;
     card.dataset.itemId = String(item.id);
     card.dataset.tipo   = tipo;
+    card.style.cursor   = 'pointer'; // Feedback visual de que toda la tarjeta es clickeable
 
     const subtitulo = tipo === 'canciones'
         ? `${item.artista}${item.album_titulo ? ' · ' + item.album_titulo : ''}`
@@ -421,18 +423,25 @@ function construirTarjetaItem(tipo, item) {
         </div>
     `;
 
-    // Abrir detalle offline al pulsar la portada o el título
-    card.querySelector('.album-card-cover')
-        ?.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            abrirDetalleItem(tipo, item.id);
-        });
-    card.querySelector('.album-card-title')
-        ?.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            abrirDetalleItem(tipo, item.id);
-        });
-    // Rating
+    // CLIC PRINCIPAL EN LA TARJETA
+    card.addEventListener('click', () => {
+        if (tipo === 'albumes') {
+            abrirDetalleItem('albumes', item.id); // Redirige a la vista offline del álbum
+        } else {
+            // Es una canción: armamos el objeto reproducible y la reproducimos de inmediato
+            const trackPlayable = {
+                id:       item.id,
+                title:    item.titulo,
+                preview:  item.preview_url || '',
+                duration: item.duracion || 0,
+                album:    { title: item.album_titulo || '', cover_medium: item.cover_url }
+            };
+            window.currentTracksContext = [trackPlayable];
+            setTracklistYReproducir([trackPlayable], 0);
+        }
+    });
+
+    // Rating (stopPropagation para no activar la reproducción/detalle al calificar)
     card.querySelectorAll('.estrella').forEach(btn => {
         btn.addEventListener('click', (ev) => {
             ev.stopPropagation();
@@ -440,7 +449,7 @@ function construirTarjetaItem(tipo, item) {
         });
     });
 
-    // Eliminar
+    // Eliminar (stopPropagation para evitar comportamientos fantasma al borrar)
     card.querySelector('.btn-eliminar-biblioteca')
         .addEventListener('click', (ev) => {
             ev.stopPropagation();
@@ -460,6 +469,7 @@ export function actualizarVistaBiblioteca() {
     const gridAlbumes   = document.getElementById('biblioteca-albumes-grid');
     const empty         = document.getElementById('biblioteca-empty');
     if (!gridCanciones || !gridAlbumes || !empty) return;
+    
     // Contenedor de detalle (se crea perezosamente la primera vez).
     const dyn = document.getElementById('biblioteca-dynamic-content');
     let detalleBox = document.getElementById('biblioteca-detalle');
@@ -469,6 +479,7 @@ export function actualizarVistaBiblioteca() {
         detalleBox.className = 'biblioteca-detalle hidden';
         dyn.appendChild(detalleBox);
     }
+    
     // Sub-vista: DETALLE OFFLINE de un item guardado.
     if (estadoUI.vista === 'detalle' && detalleBox) {
         gridCanciones.classList.add('hidden');
@@ -482,7 +493,6 @@ export function actualizarVistaBiblioteca() {
         detalleBox.classList.add('hidden');
         detalleBox.innerHTML = '';
     }
-
 
     // 1) Mostrar solo el grid del tipo activo (el otro se oculta con .hidden).
     const activo   = estadoUI.tipoActivo;
@@ -519,7 +529,9 @@ export function actualizarVistaBiblioteca() {
     const frag = document.createDocumentFragment();
     vista.forEach(item => frag.appendChild(construirTarjetaItem(activo, item)));
     gridAct.appendChild(frag);
-    // ======================================================================
+}
+
+// ======================================================================
 // 5.b VISTA DETALLE OFFLINE (canción o álbum guardado)
 // ======================================================================
 function abrirDetalleItem(tipo, itemId) {
@@ -528,18 +540,21 @@ function abrirDetalleItem(tipo, itemId) {
     estadoUI.detalleId   = itemId;
     actualizarVistaBiblioteca();
 }
+
 function volverAlGridBiblioteca() {
     estadoUI.vista       = 'grid';
     estadoUI.detalleTipo = null;
     estadoUI.detalleId   = null;
     actualizarVistaBiblioteca();
 }
+
 function formatearDuracionSeg(segundos) {
     const s = Number(segundos) || 0;
     const m = Math.floor(s / 60);
     const r = s % 60;
     return `${m}:${r < 10 ? '0' : ''}${r}`;
 }
+
 function renderDetalleItem(contenedor) {
     const items = obtenerItemsGuardados(estadoUI.detalleTipo);
     const item  = items.find(x => String(x.id) === String(estadoUI.detalleId));
@@ -629,8 +644,6 @@ function renderDetalleItem(contenedor) {
             setTracklistYReproducir(tracksPlayables, idx);
         });
     });
-}
-
 }
 
 
