@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Syne:wght@700;800&family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="Styles/styles.css">
+
 </head>
 <body class="theme-light"> <!-- Clase modificable para modo oscuro/claro (Programador 1) -->
 
@@ -348,24 +349,82 @@
         </section>
     </template>
 
-    <!-- PLANTILLA DE LA BIBLIOTECA (Trabajo del Programador 3) -->
-    <template id="temp-biblioteca">
-        <section id="library-view">
-            <!-- 
-                [PROGRAMADOR 3] Aquí va tu HTML para la colección privada[cite: 3]:
-                - Listado de álbumes favoritos guardados[cite: 3].
-                - Filtros dinámicos por cantidad de estrellas (1-5)[cite: 3].
-                - Sistema de calificación visual por estrellas en cada tarjeta de álbum[cite: 3].
-            -->
-            <div class="library-wrapper">
-                <!-- Tu código HTML de favoritos va aquí -->
-            </div>
-        </section>
-    </template>
+<!-- ============================================================
+  MÓDULO: BIBLIOTECA DE FAVORITOS
+  Se inserta dentro de la sección/vista destinada al módulo
+  de gestión personalizada dentro del index.html.
+  ============================================================ -->
+<section id="modulo-biblioteca" class="biblioteca-section" aria-labelledby="biblioteca-titulo">
 
-    <!-- ======================================================================
-          MODAL DE NOTIFICACIONES DEL SISTEMA
-         ====================================================================== -->
+    <!-- Encabezado semántico del módulo -->
+    <header class="biblioteca-header">
+        <h2 id="biblioteca-titulo">Mi Biblioteca</h2>
+        <p class="biblioteca-subtitulo">Álbumes favoritos guardados en tu sesión</p>
+    </header>
+
+    <!-- ------------------------------------------------------------
+         Barra superior de controles: filtrado y ordenación.
+         Se usa Flexbox (ver CSS) para adaptarse a pantallas pequeñas.
+         ------------------------------------------------------------ -->
+    <div class="biblioteca-controls" role="toolbar" aria-label="Controles de biblioteca">
+
+        <!-- Filtro por número de estrellas (rating) -->
+        <div class="control-group">
+            <label for="filtro-estrellas">Filtrar por calificación:</label>
+            <select id="filtro-estrellas" class="control-select">
+                <option value="todos">Ver todos</option>
+                <option value="1">1 estrella</option>
+                <option value="2">2 estrellas</option>
+                <option value="3">3 estrellas</option>
+                <option value="4">4 estrellas</option>
+                <option value="5">5 estrellas</option>
+            </select>
+        </div>
+
+        <!-- Ordenación: alfabética + "recientes" que emula un Stack (LIFO)
+             gracias a la propiedad timestamp guardada al añadir favorito -->
+        <div class="control-group">
+            <label for="orden-biblioteca">Ordenar por:</label>
+            <select id="orden-biblioteca" class="control-select">
+                <option value="recientes">Añadido reciente (Stack)</option>
+                <option value="antiguos">Más antiguos</option>
+                <option value="az">Alfabéticamente (A-Z)</option>
+                <option value="za">Alfabéticamente (Z-A)</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- ------------------------------------------------------------
+         Contenedor principal: aquí se pintan dinámicamente las
+         tarjetas de álbumes desde JS/storage.js (renderizarBiblioteca).
+         ------------------------------------------------------------ -->
+    <div id="biblioteca-grid" class="album-grid" aria-live="polite">
+        <!-- Las tarjetas se inyectan dinámicamente vía JavaScript -->
+    </div>
+
+    <!-- ------------------------------------------------------------
+         Empty State: se muestra únicamente cuando el usuario no
+         tiene favoritos guardados. Se alterna con la clase .hidden
+         ------------------------------------------------------------ -->
+    <div id="biblioteca-empty" class="biblioteca-empty hidden" role="status">
+        <!-- Icono SVG limpio (estilo SVG Repo) representando una carpeta vacía / caja -->
+        <svg class="empty-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="1.5"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 8v13H3V8"></path>
+            <path d="M1 3h22v5H1z"></path>
+            <path d="M10 12h4"></path>
+        </svg>
+        <h3>Tu biblioteca está vacía</h3>
+        <p>Aún no has guardado álbumes favoritos. Busca música y pulsa el botón de guardar para añadirlos aquí.</p>
+    </div>
+
+</section>
+
+
+<!-- ======================================================================
+      MODAL DE NOTIFICACIONES DEL SISTEMA
+     ====================================================================== -->
     <div id="cyber-popup-overlay" class="hidden">
         <div class="cyber-popup-box">
             <div class="cyber-popup-header">
